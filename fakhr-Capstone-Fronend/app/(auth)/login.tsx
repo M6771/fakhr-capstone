@@ -5,6 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { useState } from "react";
 import {
   Alert,
+  I18nManager,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,17 +19,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { login } from "../../api/auth.api";
 import { useAuth } from "../../context/AuthContext";
 
-// Design system colors
+// Brand colors
 const colors = {
-  bgApp: "#FAF9F6",
-  bgCard: "rgba(255, 255, 255, 0.6)",
-  primary: "#7FB77E",
-  primaryHover: "#6A9E69",
-  primarySoft: "#E8F0E8",
-  text: "#2F2F2F",
-  textSecondary: "#4A4A4A",
-  textTertiary: "#8A8A8A",
-  border: "rgba(0, 0, 0, 0.06)",
+  primary: "#6E7CAF",
+  primarySoft: "#AAB3D6",
+  bgTop: "#BCC3D8",
+  bgBottom: "#AAB3D6",
+  accent: "#8B91AF",
+  text: "#6E7CAF",
+  textSecondary: "#8B91AF",
+  border: "#AAB3D6",
+  white: "#FFFFFF",
 };
 
 export default function LoginScreen() {
@@ -57,7 +58,7 @@ export default function LoginScreen() {
 
   const handleLogin = () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+      Alert.alert("خطأ", "يرجى تعبئة جميع الحقول");
       return;
     }
     loginMutation.mutate({ email, password });
@@ -74,38 +75,44 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.authTitle}>Sign In</Text>
-          <Text style={styles.authWelcome}>Welcome back</Text>
-          <Text style={styles.authSub}>
-            Sign in to continue. We&apos;re here to support you every step of the
-            way.
-          </Text>
+          <View style={styles.logoBlock}>
+            <View style={styles.logoIconWrap}>
+              <View style={styles.logoIcon}>
+                <Ionicons name="heart" size={32} color={colors.white} />
+              </View>
+            </View>
+            <Text style={styles.appName}>فخر</Text>
+            <Text style={styles.appTagline}>رحلة الدعم تبدأ هنا</Text>
+          </View>
 
           <View style={styles.authForm}>
-            <View style={styles.authError} />
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Email Address</Text>
+              <Text style={styles.label}>البريد الإلكتروني</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor={colors.textTertiary}
+                placeholder="أدخل بريدك الإلكتروني"
+                placeholderTextColor={colors.textSecondary}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                textAlign="right"
+                writingDirection={I18nManager.isRTL ? "rtl" : "rtl"}
               />
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>كلمة المرور</Text>
               <View style={styles.inputWrap}>
                 <TextInput
                   style={styles.inputInWrap}
-                  placeholder="Enter your password"
-                  placeholderTextColor={colors.textTertiary}
+                  placeholder="أدخل كلمة المرور"
+                  placeholderTextColor={colors.textSecondary}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!isPasswordVisible}
+                  textAlign="right"
+                  writingDirection={I18nManager.isRTL ? "rtl" : "rtl"}
                 />
                 <Pressable
                   style={({ pressed }) => [
@@ -117,7 +124,7 @@ export default function LoginScreen() {
                   <Ionicons
                     name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color={colors.textTertiary}
+                    color={colors.textSecondary}
                   />
                 </Pressable>
               </View>
@@ -132,19 +139,39 @@ export default function LoginScreen() {
               disabled={loginMutation.isPending}
             >
               <Text style={styles.btnPrimaryText}>
-                {loginMutation.isPending ? "Signing In..." : "Sign In"}
+                {loginMutation.isPending ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
               </Text>
             </Pressable>
-          </View>
 
-          <Pressable onPress={() => router.push("/(auth)/register")}>
-            {({ pressed }) => (
-              <Text style={[styles.authFooter, pressed && { opacity: 0.7 }]}>
-                Don&apos;t have an account?{" "}
-                <Text style={styles.authFooterLink}>Create account</Text>
-              </Text>
-            )}
-          </Pressable>
+            <Pressable>
+              {({ pressed }) => (
+                <Text
+                  style={[
+                    styles.forgotPassword,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                >
+                  نسيت كلمة المرور؟
+                </Text>
+              )}
+            </Pressable>
+
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>أو</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.btnSecondary,
+                pressed && { opacity: 0.85 },
+              ]}
+              onPress={() => router.push("/(auth)/register")}
+            >
+              <Text style={styles.btnSecondaryText}>إنشاء حساب جديد</Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -154,90 +181,100 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bgApp,
+    backgroundColor: colors.bgTop,
   },
   keyboard: {
     flex: 1,
   },
   scrollContent: {
-    padding: 28,
-    paddingHorizontal: 24,
-    paddingBottom: 48,
+    paddingTop: 48,
+    paddingHorizontal: 32,
+    paddingBottom: 40,
     alignItems: "center",
   },
-  authTitle: {
-    fontSize: 22.4, // 1.4rem
-    fontWeight: "600",
+  logoBlock: {
+    alignItems: "center",
+    marginBottom: 40,
+  },
+  logoIconWrap: {
     marginBottom: 24,
-    textAlign: "center",
-    color: colors.text,
-    letterSpacing: -0.32,
   },
-  authWelcome: {
-    fontSize: 24, // 1.5rem
-    fontWeight: "600",
-    marginBottom: 10,
-    textAlign: "center",
-    color: colors.text,
-    letterSpacing: -0.32,
+  logoIcon: {
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    backgroundColor: colors.accent,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
   },
-  authSub: {
-    fontSize: 15.2, // 0.95rem
+  appName: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: 8,
+  },
+  appTagline: {
+    fontSize: 14,
     color: colors.textSecondary,
-    textAlign: "center",
-    marginBottom: 32,
-    maxWidth: 320,
-    lineHeight: 22.8,
   },
   authForm: {
     width: "100%",
     maxWidth: 360,
   },
-  authError: {
-    opacity: 0,
-    height: 0,
-    marginBottom: 0,
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-  },
   formGroup: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 14.4, // 0.9rem
+    fontSize: 14,
     fontWeight: "600",
-    marginBottom: 8,
+    marginBottom: 6,
     color: colors.text,
+    textAlign: "right",
   },
   input: {
     width: "100%",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12, // Rounded inputs
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.border,
     fontSize: 16,
-    backgroundColor: colors.bgCard, // Semi-transparent
+    backgroundColor: colors.white,
     color: colors.text,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   inputWrap: {
     position: "relative",
   },
   inputInWrap: {
     width: "100%",
-    paddingVertical: 14,
-    paddingRight: 48,
-    paddingLeft: 16,
-    borderRadius: 12, // Rounded inputs
+    paddingVertical: 16,
+    paddingRight: 18,
+    paddingLeft: 52,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.border,
     fontSize: 16,
-    backgroundColor: colors.bgCard, // Semi-transparent
+    backgroundColor: colors.white,
     color: colors.text,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   togglePassword: {
     position: "absolute",
-    right: 12,
+    left: 14,
     top: "50%",
     transform: [{ translateY: -10 }],
     borderRadius: 6,
@@ -247,36 +284,54 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingVertical: 16,
     backgroundColor: colors.primary,
-    borderRadius: 24, // Rounded button
+    borderRadius: 24,
     alignItems: "center",
-    marginBottom: 20,
+    marginTop: 8,
+    marginBottom: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 3,
   },
   btnPrimaryText: {
-    color: "#FFFFFF",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },
-  createAccountContainer: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  createAccountText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#333333",
-  },
-  authFooter: {
+  forgotPassword: {
+    fontSize: 13,
+    color: colors.textSecondary,
     textAlign: "center",
-    fontSize: 14.4,
+    marginBottom: 24,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
+    gap: 8,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    fontSize: 13,
     color: colors.textSecondary,
   },
-  authFooterLink: {
-    color: colors.primary,
+  btnSecondary: {
+    width: "100%",
+    paddingVertical: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: colors.white,
+    alignItems: "center",
+  },
+  btnSecondaryText: {
+    fontSize: 15,
     fontWeight: "600",
+    color: colors.primary,
   },
 });
