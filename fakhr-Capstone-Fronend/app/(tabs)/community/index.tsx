@@ -1,82 +1,130 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import React, { useMemo, useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  CommunityCreatePostCard,
+  CommunityFeedBottomNav,
+  CommunityFeedHeader,
+  CommunityInfoBanner,
+  CommunityPostCard,
+  type CommunityPostCardProps,
+  CommunityTabPills,
+  type FeedTabId,
+  feedColors,
+  feedSpacing,
+} from "../../../components/community-feed";
 
-// Design system colors
-const colors = {
-  bgApp: "#FAF9F6",
-  bgCard: "rgba(255, 255, 255, 0.6)",
-  text: "#2F2F2F",
-  textSecondary: "#4A4A4A",
-  border: "rgba(0, 0, 0, 0.06)",
+const ME_AVATAR =
+  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80";
+const AHMED_AVATAR =
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80";
+const SARAH_AVATAR =
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80";
+const READING_IMG =
+  "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80";
+
+type PostRow = CommunityPostCardProps & {
+  feedTabs: FeedTabId[];
 };
 
+const ALL_POSTS: PostRow[] = [
+  {
+    variant: "text",
+    authorName: "Ahmed K.",
+    authorMeta: "2 hours ago • Father of 2",
+    avatarUri: AHMED_AVATAR,
+    content:
+      "Last night was tough — meltdown at bedtime — but we breathed through it together. Small wins count. 🌙",
+    initialLikes: 24,
+    comments: 8,
+    feedTabs: ["all", "tips"],
+    contentLines: 5,
+  },
+  {
+    variant: "image",
+    authorName: "Sarah M.",
+    authorMeta: "5 hours ago • Educator & Mom",
+    avatarUri: SARAH_AVATAR,
+    content:
+      "Found this moment during story time — three little readers, one cozy corner. Grateful for quiet joy.",
+    imageUri: READING_IMG,
+    initialLikes: 142,
+    comments: 15,
+    feedTabs: ["all", "education"],
+    contentLines: 4,
+  },
+  {
+    variant: "question",
+    authorName: "Anonymous Parent",
+    authorMeta: "8 hours ago • Seeking Advice",
+    anonymous: true,
+    badgeLabel: "HEALTH QUESTION",
+    content:
+      "How do I explain my child’s sensory needs to relatives who don’t really “get it” yet?",
+    initialLikes: 0,
+    comments: 0,
+    responsesCount: 12,
+    feedTabs: ["all", "tips"],
+    contentLines: 5,
+  },
+];
+
 export default function CommunityScreen() {
+  const router = useRouter();
+  const [tab, setTab] = useState<FeedTabId>("all");
+
+  const openComposer = () => {
+    router.push("/(tabs)/community/create-post" as never);
+  };
+
+  const visible = useMemo(() => {
+    if (tab === "all") return ALL_POSTS;
+    return ALL_POSTS.filter((p) => p.feedTabs.includes(tab));
+  }, [tab]);
+
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <View style={styles.content}>
-        {/* Icon Container - Square with rounded corners, white background */}
-        <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>👥</Text>
-        </View>
-
-        {/* Title - Bold, dark grey */}
-        <Text style={styles.title}>Community</Text>
-
-        {/* Description - Three-line text, centered, lighter grey */}
-        <Text style={styles.description}>
-          Connect with other families, share experiences, and find support.
-          You're part of a caring community.
-        </Text>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <View style={styles.root}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <CommunityFeedHeader avatarUri={ME_AVATAR} />
+          <CommunityInfoBanner />
+          <CommunityCreatePostCard
+            composerAvatarUri={ME_AVATAR}
+            onComposerPress={openComposer}
+          />
+          <CommunityTabPills active={tab} onChange={setTab} />
+          {visible.map((post, i) => (
+            <CommunityPostCard key={`${post.authorName}-${i}`} {...post} />
+          ))}
+        </ScrollView>
+        <CommunityFeedBottomNav
+          active="discover"
+          onFabPress={openComposer}
+        />
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: colors.bgApp, // Light beige/off-white background
+    backgroundColor: feedColors.background,
+  },
+  root: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
   },
   content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingBottom: 100, // Clear spacing above tab bar
-  },
-  // Icon Container - Square with rounded corners, white background
-  iconContainer: {
-    width: 64, // Square container
-    height: 64,
-    borderRadius: 14, // Rounded corners
-    backgroundColor: "#FFFFFF", // White background
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20, // Ample vertical spacing between icon and title
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2, // Subtle shadow for depth
-  },
-  iconText: {
-    fontSize: 32, // Icon size - two human figures emoji
-  },
-  // Title - Bold, dark grey sans-serif
-  title: {
-    fontSize: 22, // Large and prominent
-    fontWeight: "600", // Bold or semi-bold
-    color: colors.text, // Dark grey
-    textAlign: "center",
-    marginBottom: 12, // Ample vertical spacing between title and description
-  },
-  // Description - Three-line text, lighter grey, centered
-  description: {
-    fontSize: 15, // Standard readable size
-    color: colors.textSecondary, // Lighter grey
-    textAlign: "center",
-    lineHeight: 22, // Comfortable line height for readability
-    maxWidth: 320, // Prevents full-width spanning, allows wrapping into three lines
-    paddingHorizontal: 16,
+    paddingHorizontal: feedSpacing.screen,
+    paddingBottom: 120,
   },
 });
