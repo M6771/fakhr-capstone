@@ -20,6 +20,12 @@ export default function DirectoryLayout() {
       }}
     >
       <Stack.Screen
+        name="centers-professionals"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="centers"
         options={{
           headerShown: true,

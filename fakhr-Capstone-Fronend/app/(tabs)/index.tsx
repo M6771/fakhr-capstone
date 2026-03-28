@@ -949,7 +949,9 @@ export default function HomeScreen() {
               </View>
             </View>
             <Pressable
-              onPress={() => router.push("/(tabs)/directory/centers")}
+              onPress={() =>
+              router.push("/(tabs)/directory/centers-professionals" as never)
+            }
               style={({ pressed }) => [
                 styles.centersViewAllBtn,
                 pressed && { opacity: 0.7 },
