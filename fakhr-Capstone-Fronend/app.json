@@ -41,7 +41,13 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to your photos to set your child's profile picture."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

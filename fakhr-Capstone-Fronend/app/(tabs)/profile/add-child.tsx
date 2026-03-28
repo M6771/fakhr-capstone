@@ -18,21 +18,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useMutation } from "@tanstack/react-query";
 import { createChild } from "../../../api/children.api";
-
-// Design system colors
-const colors = {
-  bgApp: "#FAF9F6",
-  bgCard: "#FFFFFF",
-  primary: "#7FB77E",
-  primaryLight: "#E8F5E8",
-  secondary: "#5F8F8B",
-  text: "#2F2F2F",
-  textSecondary: "#4A4A4A",
-  textMuted: "#8A8A8A",
-  border: "rgba(0, 0, 0, 0.08)",
-  error: "#D9534F",
-  errorLight: "#FDECEA",
-};
+import {
+  cardShadow,
+  colors,
+  radius,
+  spacing,
+  typography,
+  touchTargets,
+} from "../../../theme";
 
 // Form steps
 const STEPS = [
@@ -315,7 +308,7 @@ export default function AddChildScreen() {
             onPress={() => step.id < currentStep && setCurrentStep(step.id)}
           >
             {currentStep > step.id ? (
-              <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+              <Ionicons name="checkmark" size={14} color={colors.backgroundCard} />
             ) : (
               <Text
                 style={[
@@ -359,7 +352,7 @@ export default function AddChildScreen() {
         <TextInput
           style={styles.input}
           placeholder="Enter first name"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textLight}
           value={formData.firstName}
           onChangeText={(text) =>
             setFormData((prev) => ({ ...prev, firstName: text }))
@@ -372,7 +365,7 @@ export default function AddChildScreen() {
         <TextInput
           style={styles.input}
           placeholder="Enter last name"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textLight}
           value={formData.lastName}
           onChangeText={(text) =>
             setFormData((prev) => ({ ...prev, lastName: text }))
@@ -391,7 +384,7 @@ export default function AddChildScreen() {
           >
             {formData.dateOfBirth || "DD/MM/YYYY"}
           </Text>
-          <Ionicons name="calendar-outline" size={20} color={colors.textMuted} />
+          <Ionicons name="calendar-outline" size={20} color={colors.primary} />
         </Pressable>
         {Platform.OS === "ios" && showDatePicker && (
           <Modal
@@ -452,7 +445,7 @@ export default function AddChildScreen() {
               <Ionicons
                 name={gender === "Male" ? "male" : "female"}
                 size={20}
-                color={formData.gender === gender ? "#FFFFFF" : colors.textSecondary}
+                color={formData.gender === gender ? colors.backgroundCard : colors.textSecondary}
               />
               <Text
                 style={[
@@ -475,7 +468,7 @@ export default function AddChildScreen() {
         onPress={handleStep1Submit}
       >
         <Text style={styles.submitButtonText}>Submit</Text>
-        <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+        <Ionicons name="arrow-forward" size={18} color={colors.backgroundCard} />
       </Pressable>
     </View>
   );
@@ -525,7 +518,7 @@ export default function AddChildScreen() {
               ]}
             >
               {formData.diagnoses.includes(diagnosis.id) && (
-                <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                <Ionicons name="checkmark" size={16} color={colors.backgroundCard} />
               )}
             </View>
           </Pressable>
@@ -537,7 +530,7 @@ export default function AddChildScreen() {
         <TextInput
           style={styles.input}
           placeholder="When was the diagnosis made?"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textLight}
           value={formData.diagnosisDate}
           onChangeText={(text) =>
             setFormData((prev) => ({ ...prev, diagnosisDate: text }))
@@ -550,7 +543,7 @@ export default function AddChildScreen() {
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="Any additional information about the diagnosis..."
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textLight}
           multiline
           numberOfLines={4}
           value={formData.diagnosisNotes}
@@ -568,7 +561,7 @@ export default function AddChildScreen() {
         onPress={handleStep2Submit}
       >
         <Text style={styles.submitButtonText}>Submit</Text>
-        <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+        <Ionicons name="arrow-forward" size={18} color={colors.backgroundCard} />
       </Pressable>
     </View>
   );
@@ -618,7 +611,7 @@ export default function AddChildScreen() {
           <TextInput
             style={styles.input}
             placeholder="e.g., Ritalin, Adderall"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={colors.textLight}
             value={formData.currentMedication.name}
             onChangeText={(text) =>
               setFormData((prev) => ({
@@ -635,7 +628,7 @@ export default function AddChildScreen() {
             <TextInput
               style={styles.input}
               placeholder="e.g., 10mg"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={colors.textLight}
               value={formData.currentMedication.dosage}
               onChangeText={(text) =>
                 setFormData((prev) => ({
@@ -650,7 +643,7 @@ export default function AddChildScreen() {
             <TextInput
               style={styles.input}
               placeholder="e.g., Daily"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={colors.textLight}
               value={formData.currentMedication.frequency}
               onChangeText={(text) =>
                 setFormData((prev) => ({
@@ -671,7 +664,7 @@ export default function AddChildScreen() {
           onPress={addMedication}
           disabled={!formData.currentMedication.name.trim()}
         >
-          <Ionicons name="add" size={20} color="#FFFFFF" />
+          <Ionicons name="add" size={20} color={colors.backgroundCard} />
           <Text style={styles.addButtonText}>Add Medication</Text>
         </Pressable>
       </View>
@@ -684,7 +677,7 @@ export default function AddChildScreen() {
         onPress={handleStep3Submit}
       >
         <Text style={styles.submitButtonText}>Submit</Text>
-        <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+        <Ionicons name="arrow-forward" size={18} color={colors.backgroundCard} />
       </Pressable>
     </View>
   );
@@ -724,7 +717,7 @@ export default function AddChildScreen() {
               {allergy}
             </Text>
             {formData.allergies.includes(allergy) && (
-              <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+              <Ionicons name="checkmark" size={16} color={colors.backgroundCard} />
             )}
           </Pressable>
         ))}
@@ -735,7 +728,7 @@ export default function AddChildScreen() {
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="List any other allergies or reactions..."
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textLight}
           multiline
           numberOfLines={4}
           value={formData.allergyNotes}
@@ -769,11 +762,11 @@ export default function AddChildScreen() {
         disabled={createChildMutation.isPending}
       >
         {createChildMutation.isPending ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
+          <ActivityIndicator size="small" color={colors.backgroundCard} />
         ) : (
           <>
             <Text style={styles.doneButtonText}>Done</Text>
-            <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+            <Ionicons name="checkmark" size={18} color={colors.backgroundCard} />
           </>
         )}
       </Pressable>
@@ -858,7 +851,7 @@ export default function AddChildScreen() {
           <Ionicons
             name={currentStep === 4 ? "checkmark" : "arrow-forward"}
             size={18}
-            color="#FFFFFF"
+            color={colors.backgroundCard}
           />
         </Pressable>
       </View>
@@ -869,21 +862,21 @@ export default function AddChildScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bgApp,
+    backgroundColor: colors.background,
   },
   // Header
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.md,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.bgCard,
+    width: touchTargets.minimum,
+    height: touchTargets.minimum,
+    borderRadius: radius.md,
+    backgroundColor: colors.backgroundCard,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -891,31 +884,33 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: typography.h3,
+    lineHeight: typography.h3LineHeight,
+    fontWeight: typography.weightBold,
     color: colors.text,
   },
   headerSubtitle: {
-    fontSize: 12,
+    fontSize: typography.label,
+    lineHeight: typography.labelLineHeight,
     color: colors.textMuted,
-    marginTop: 2,
+    marginTop: spacing.xxs,
   },
   headerRight: {
-    width: 40,
+    width: touchTargets.minimum,
   },
   // Step Indicator
   stepIndicator: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 40,
-    paddingVertical: 20,
+    paddingHorizontal: spacing.xxxl,
+    paddingVertical: spacing.lg,
   },
   stepDot: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.bgCard,
+    backgroundColor: colors.backgroundCard,
     borderWidth: 2,
     borderColor: colors.border,
     alignItems: "center",
@@ -928,11 +923,12 @@ const styles = StyleSheet.create({
   stepDotCurrent: {
     borderWidth: 3,
     borderColor: colors.primary,
-    backgroundColor: colors.bgCard,
+    backgroundColor: colors.backgroundCard,
   },
   stepNumber: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: typography.label,
+    lineHeight: typography.labelLineHeight,
+    fontWeight: typography.weightSemibold,
     color: colors.textMuted,
   },
   stepNumberActive: {
@@ -942,7 +938,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 2,
     backgroundColor: colors.border,
-    marginHorizontal: 8,
+    marginHorizontal: spacing.sm,
   },
   stepLineActive: {
     backgroundColor: colors.primary,
@@ -952,70 +948,70 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.screenHorizontal,
     paddingBottom: 100,
   },
   // Form Section
   formSection: {
-    backgroundColor: colors.bgCard,
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    backgroundColor: colors.backgroundCard,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    ...cardShadow,
   },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    marginBottom: 24,
+    gap: spacing.md,
+    marginBottom: spacing.lg,
   },
   sectionIcon: {
     width: 48,
     height: 48,
-    borderRadius: 14,
+    borderRadius: radius.md,
     backgroundColor: `${colors.primary}15`,
     alignItems: "center",
     justifyContent: "center",
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: typography.h2,
+    lineHeight: typography.h2LineHeight,
+    fontWeight: typography.weightBold,
     color: colors.text,
   },
   sectionSubtitle: {
-    fontSize: 13,
+    fontSize: typography.caption,
+    lineHeight: typography.captionLineHeight,
     color: colors.textMuted,
-    marginTop: 2,
+    marginTop: spacing.xxs,
   },
   // Input
   inputGroup: {
-    marginBottom: 18,
+    marginBottom: spacing.md + 2,
   },
   inputLabel: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: typography.caption,
+    lineHeight: typography.captionLineHeight,
+    fontWeight: typography.weightSemibold,
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   input: {
-    backgroundColor: colors.bgApp,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
+    backgroundColor: colors.background,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md + 2,
+    fontSize: typography.bodySmall,
+    lineHeight: typography.bodySmallLineHeight,
     color: colors.text,
     borderWidth: 1,
     borderColor: colors.border,
   },
   dateInput: {
-    backgroundColor: colors.bgApp,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
+    backgroundColor: colors.background,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md + 2,
+    fontSize: typography.bodySmall,
     borderWidth: 1,
     borderColor: colors.border,
     flexDirection: "row",
@@ -1023,7 +1019,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   dateInputText: {
-    fontSize: 15,
+    fontSize: typography.bodySmall,
+    lineHeight: typography.bodySmallLineHeight,
     color: colors.text,
   },
   dateInputPlaceholder: {
@@ -1035,33 +1032,35 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   datePickerContainer: {
-    backgroundColor: colors.bgCard,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 40,
+    backgroundColor: colors.backgroundCard,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingBottom: spacing.pageBottom,
   },
   datePickerHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   datePickerTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: typography.body,
+    lineHeight: typography.bodyLineHeight,
+    fontWeight: typography.weightSemibold,
     color: colors.text,
   },
   datePickerButton: {
-    fontSize: 15,
+    fontSize: typography.bodySmall,
+    lineHeight: typography.bodySmallLineHeight,
     color: colors.textSecondary,
-    fontWeight: "500",
+    fontWeight: typography.weightMedium,
   },
   datePickerButtonConfirm: {
     color: colors.primary,
-    fontWeight: "600",
+    fontWeight: typography.weightSemibold,
   },
   textArea: {
     minHeight: 100,
@@ -1069,22 +1068,22 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: spacing.md,
   },
   // Gender
   genderRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: spacing.md,
   },
   genderOption: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: colors.bgApp,
+    gap: spacing.sm,
+    paddingVertical: spacing.md + 2,
+    borderRadius: radius.md,
+    backgroundColor: colors.background,
     borderWidth: 1.5,
     borderColor: colors.border,
   },
@@ -1093,59 +1092,64 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   genderText: {
-    fontSize: 15,
-    fontWeight: "500",
+    fontSize: typography.bodySmall,
+    lineHeight: typography.bodySmallLineHeight,
+    fontWeight: typography.weightMedium,
     color: colors.textSecondary,
   },
   genderTextActive: {
-    color: "#FFFFFF",
+    color: colors.backgroundCard,
   },
   // Submit Button
   submitButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: spacing.sm,
     backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    marginTop: 8,
+    borderRadius: radius.md,
+    paddingVertical: spacing.lg,
+    minHeight: touchTargets.button,
+    marginTop: spacing.sm,
   },
   submitButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontSize: typography.bodySmall,
+    lineHeight: typography.bodySmallLineHeight,
+    fontWeight: typography.weightSemibold,
+    color: colors.backgroundCard,
   },
   // Done Button
   doneButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: spacing.sm,
     backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    marginTop: 8,
+    borderRadius: radius.md,
+    paddingVertical: spacing.lg,
+    minHeight: touchTargets.button,
+    marginTop: spacing.sm,
   },
   doneButtonDisabled: {
     opacity: 0.6,
   },
   doneButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontSize: typography.bodySmall,
+    lineHeight: typography.bodySmallLineHeight,
+    fontWeight: typography.weightSemibold,
+    color: colors.backgroundCard,
   },
   // Diagnosis
   diagnosisList: {
-    gap: 10,
-    marginBottom: 20,
+    gap: spacing.sm + 2,
+    marginBottom: spacing.screenHorizontal,
   },
   diagnosisCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: colors.bgApp,
+    padding: spacing.md + 2,
+    borderRadius: radius.md,
+    backgroundColor: colors.background,
     borderWidth: 1.5,
     borderColor: colors.border,
   },
@@ -1157,23 +1161,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   diagnosisLabel: {
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: typography.bodySmall,
+    lineHeight: typography.bodySmallLineHeight,
+    fontWeight: typography.weightSemibold,
     color: colors.text,
-    marginBottom: 2,
+    marginBottom: spacing.xxs,
   },
   diagnosisLabelActive: {
     color: colors.primary,
   },
   diagnosisDesc: {
-    fontSize: 12,
+    fontSize: typography.overline,
+    lineHeight: typography.overlineLineHeight,
     color: colors.textMuted,
   },
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 8,
-    backgroundColor: colors.bgCard,
+    borderRadius: radius.sm,
+    backgroundColor: colors.backgroundCard,
     borderWidth: 2,
     borderColor: colors.border,
     alignItems: "center",
@@ -1185,85 +1191,91 @@ const styles = StyleSheet.create({
   },
   // Medications
   medicationsList: {
-    gap: 10,
-    marginBottom: 20,
+    gap: spacing.sm + 2,
+    marginBottom: spacing.screenHorizontal,
   },
   medicationCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.bgApp,
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: colors.background,
+    borderRadius: radius.md,
+    padding: spacing.md + 2,
   },
   medicationInfo: {
     flex: 1,
   },
   medicationName: {
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: typography.bodySmall,
+    lineHeight: typography.bodySmallLineHeight,
+    fontWeight: typography.weightSemibold,
     color: colors.text,
-    marginBottom: 2,
+    marginBottom: spacing.xxs,
   },
   medicationDetails: {
-    fontSize: 13,
+    fontSize: typography.label,
+    lineHeight: typography.labelLineHeight,
     color: colors.textMuted,
   },
   removeButton: {
-    padding: 4,
+    padding: spacing.xs,
   },
   addMedicationCard: {
-    backgroundColor: colors.bgApp,
-    borderRadius: 14,
-    padding: 16,
+    backgroundColor: colors.background,
+    borderRadius: radius.md,
+    padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
     borderStyle: "dashed",
   },
   addMedicationTitle: {
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: typography.bodySmall,
+    lineHeight: typography.bodySmallLineHeight,
+    fontWeight: typography.weightSemibold,
     color: colors.text,
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: spacing.sm,
     backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 12,
-    marginTop: 4,
+    borderRadius: radius.sm,
+    paddingVertical: spacing.md,
+    marginTop: spacing.xs,
+    minHeight: touchTargets.buttonSmall,
   },
   addButtonDisabled: {
     backgroundColor: colors.textMuted,
   },
   addButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontSize: typography.caption,
+    lineHeight: typography.captionLineHeight,
+    fontWeight: typography.weightSemibold,
+    color: colors.backgroundCard,
   },
   // Allergies
   subsectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: typography.caption,
+    lineHeight: typography.captionLineHeight,
+    fontWeight: typography.weightSemibold,
     color: colors.textSecondary,
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   allergiesGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 24,
+    gap: spacing.sm + 2,
+    marginBottom: spacing.lg,
   },
   allergyChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: colors.bgApp,
+    gap: spacing.xs + 2,
+    paddingHorizontal: spacing.md + 2,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.xl,
+    backgroundColor: colors.background,
     borderWidth: 1.5,
     borderColor: colors.border,
   },
@@ -1272,52 +1284,55 @@ const styles = StyleSheet.create({
     borderColor: colors.error,
   },
   allergyChipText: {
-    fontSize: 13,
-    fontWeight: "500",
+    fontSize: typography.label,
+    lineHeight: typography.labelLineHeight,
+    fontWeight: typography.weightMedium,
     color: colors.textSecondary,
   },
   allergyChipTextActive: {
-    color: "#FFFFFF",
+    color: colors.backgroundCard,
   },
   selectedAllergies: {
     backgroundColor: colors.errorLight,
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 8,
+    borderRadius: radius.md,
+    padding: spacing.md + 2,
+    marginTop: spacing.sm,
   },
   selectedTitle: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: typography.label,
+    lineHeight: typography.labelLineHeight,
+    fontWeight: typography.weightSemibold,
     color: colors.error,
-    marginBottom: 10,
+    marginBottom: spacing.sm + 2,
   },
   selectedList: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: spacing.sm,
   },
   selectedBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.bgCard,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    gap: spacing.xs + 2,
+    backgroundColor: colors.backgroundCard,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.sm,
   },
   selectedBadgeText: {
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: typography.overline,
+    lineHeight: typography.overlineLineHeight,
+    fontWeight: typography.weightMedium,
     color: colors.error,
   },
   // Bottom Navigation
   bottomNav: {
     flexDirection: "row",
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingBottom: 32,
-    backgroundColor: colors.bgCard,
+    gap: spacing.md,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingVertical: spacing.lg,
+    paddingBottom: spacing.xxxl,
+    backgroundColor: colors.backgroundCard,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
@@ -1325,15 +1340,17 @@ const styles = StyleSheet.create({
     flex: 0.4,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 16,
-    borderRadius: 14,
-    backgroundColor: colors.bgApp,
+    paddingVertical: spacing.lg,
+    borderRadius: radius.md,
+    backgroundColor: colors.background,
     borderWidth: 1.5,
     borderColor: colors.border,
+    minHeight: touchTargets.button,
   },
   secondaryButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: typography.bodySmall,
+    lineHeight: typography.bodySmallLineHeight,
+    fontWeight: typography.weightSemibold,
     color: colors.textSecondary,
   },
   primaryButton: {
@@ -1341,14 +1358,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: 14,
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+    borderRadius: radius.md,
     backgroundColor: colors.primary,
+    minHeight: touchTargets.button,
   },
   primaryButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    fontSize: typography.bodySmall,
+    lineHeight: typography.bodySmallLineHeight,
+    fontWeight: typography.weightSemibold,
+    color: colors.backgroundCard,
   },
 });

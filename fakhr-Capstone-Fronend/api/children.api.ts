@@ -17,6 +17,8 @@ export interface Child {
   medicalHistory?: string;
   medications?: Medication[];
   allergies?: string[];
+  /** Server path under /uploads, e.g. /uploads/profiles/child-profile-xxx.jpg */
+  profileImageUrl?: string;
   parentId: string;
   createdAt?: string;
   updatedAt?: string;
@@ -97,8 +99,33 @@ export const updateChild = async (
     medicalHistory?: string;
     medications?: Medication[];
     allergies?: string[];
+    clearProfileImage?: boolean;
   }
 ): Promise<Child> => {
   const response = await instance.put<ChildResponse>(`/children/${childId}`, data);
+  return (response as unknown as ChildResponse).data.child;
+};
+
+/**
+ * Upload or replace profile photo (multipart field: image)
+ * POST /api/children/:childId/profile-image
+ */
+export const uploadChildProfileImage = async (
+  childId: string,
+  localUri: string
+): Promise<Child> => {
+  const formData = new FormData();
+  const filename = localUri.split("/").pop() || "photo.jpg";
+  // React Native FormData file shape
+  formData.append("image", {
+    uri: localUri,
+    name: filename.endsWith(".png") ? filename : `${filename.replace(/\.[^.]+$/, "")}.jpg`,
+    type: "image/jpeg",
+  } as never);
+
+  const response = await instance.post<ChildResponse>(
+    `/children/${childId}/profile-image`,
+    formData
+  );
   return (response as unknown as ChildResponse).data.child;
 };

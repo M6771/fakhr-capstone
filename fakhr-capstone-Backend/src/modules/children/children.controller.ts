@@ -1,9 +1,24 @@
+import fs from "fs";
+import path from "path";
 import { Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import Child from "../../models/Child.model";
 import { ApiError } from "../../middlewares/apiError";
 import { HTTP_STATUS } from "../../config/constants";
 import { AuthRequest } from "../../middlewares/auth.middleware";
+
+function deleteProfileImageFile(profileImageUrl?: string | null): void {
+  if (!profileImageUrl || !profileImageUrl.startsWith("/uploads/")) return;
+  const relative = profileImageUrl.replace(/^\//, "");
+  const abs = path.join(process.cwd(), relative);
+  if (abs.startsWith(path.join(process.cwd(), "uploads")) && fs.existsSync(abs)) {
+    try {
+      fs.unlinkSync(abs);
+    } catch {
+      /* ignore */
+    }
+  }
+}
 
 /**
  * Get all children for the authenticated user
@@ -54,6 +69,7 @@ export const getChildren = async (
             medicalHistory: child.medicalHistory,
             medications: parsedMedications,
             allergies: parsedAllergies,
+            profileImageUrl: child.profileImageUrl,
             parentId: child.parentId.toString(),
             createdAt: child.createdAt,
             updatedAt: child.updatedAt,
@@ -137,6 +153,7 @@ export const getChildById = async (
           medicalHistory: child.medicalHistory,
           medications: parsedMedications,
           allergies: parsedAllergies,
+          profileImageUrl: child.profileImageUrl,
           parentId: child.parentId.toString(),
           createdAt: child.createdAt,
           updatedAt: child.updatedAt,
@@ -261,6 +278,7 @@ export const createChild = async (
           medicalHistory: child.medicalHistory,
           medications: parsedMedications,
           allergies: parsedAllergies,
+          profileImageUrl: child.profileImageUrl,
           parentId: child.parentId.toString(),
           createdAt: child.createdAt,
           updatedAt: child.updatedAt,
@@ -301,7 +319,8 @@ export const updateChild = async (
       throw ApiError.forbidden("Cannot change parentId. Only the original creator can update this child.");
     }
 
-    const { name, age, gender, dateOfBirth, diagnosis, medicalHistory, medications, allergies } = req.body;
+    const { name, age, gender, dateOfBirth, diagnosis, medicalHistory, medications, allergies, clearProfileImage } =
+      req.body;
 
     // Find child and verify ownership
     const child = await Child.findOne({
@@ -388,16 +407,23 @@ export const updateChild = async (
       }
     }
 
-    if (Object.keys(updateData).length === 0) {
+    const mongoUpdate: { $set?: typeof updateData; $unset?: { profileImageUrl: 1 } } = {};
+    if (Object.keys(updateData).length > 0) {
+      mongoUpdate.$set = updateData;
+    }
+    if (clearProfileImage === true) {
+      deleteProfileImageFile(child.profileImageUrl);
+      mongoUpdate.$unset = { profileImageUrl: 1 };
+    }
+    if (!mongoUpdate.$set && !mongoUpdate.$unset) {
       throw ApiError.badRequest("No valid fields to update");
     }
 
     // Update child
-    const updatedChild = await Child.findByIdAndUpdate(
-      childId,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const updatedChild = await Child.findByIdAndUpdate(childId, mongoUpdate, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedChild) {
       throw ApiError.notFound("Child not found");
@@ -434,9 +460,98 @@ export const updateChild = async (
           medicalHistory: updatedChild.medicalHistory,
           medications: parsedMedications,
           allergies: parsedAllergies,
+          profileImageUrl: updatedChild.profileImageUrl,
           parentId: updatedChild.parentId.toString(),
           createdAt: updatedChild.createdAt,
           updatedAt: updatedChild.updatedAt,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Upload or replace child profile image (multipart field: image)
+ * POST /api/children/:childId/profile-image
+ */
+export const uploadChildProfileImage = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw ApiError.unauthorized("User not authenticated");
+    }
+
+    const childId = Array.isArray(req.params.childId) ? req.params.childId[0] : req.params.childId;
+
+    if (!childId || !mongoose.Types.ObjectId.isValid(childId)) {
+      throw ApiError.badRequest("Invalid child ID format");
+    }
+
+    const file = req.file;
+    if (!file) {
+      throw ApiError.badRequest("No image file uploaded (use field name: image)");
+    }
+
+    const child = await Child.findOne({
+      _id: childId,
+      parentId: req.user.id,
+    });
+
+    if (!child) {
+      try {
+        fs.unlinkSync(file.path);
+      } catch {
+        /* ignore */
+      }
+      throw ApiError.notFound("Child not found or you don't have permission to update it");
+    }
+
+    if (child.profileImageUrl) {
+      deleteProfileImageFile(child.profileImageUrl);
+    }
+
+    const relativePath = `/uploads/profiles/${file.filename}`;
+    child.profileImageUrl = relativePath;
+    await child.save();
+
+    let parsedMedications: any = child.medications;
+    if (parsedMedications) {
+      try {
+        const parsed = JSON.parse(parsedMedications);
+        if (Array.isArray(parsed)) {
+          parsedMedications = parsed;
+        }
+      } catch {
+        /* keep */
+      }
+    }
+
+    const parsedDiagnosis = child.diagnosis ? child.diagnosis.split(", ").filter(Boolean) : [];
+    const parsedAllergies = child.allergies ? child.allergies.split(", ").filter(Boolean) : [];
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: {
+        child: {
+          id: child._id.toString(),
+          name: child.name,
+          age: child.age,
+          dateOfBirth: child.dateOfBirth,
+          gender: child.gender,
+          diagnosis: parsedDiagnosis,
+          diagnoses: parsedDiagnosis,
+          medicalHistory: child.medicalHistory,
+          medications: parsedMedications,
+          allergies: parsedAllergies,
+          profileImageUrl: child.profileImageUrl,
+          parentId: child.parentId.toString(),
+          createdAt: child.createdAt,
+          updatedAt: child.updatedAt,
         },
       },
     });

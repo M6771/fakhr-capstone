@@ -80,6 +80,16 @@ const dummyData = {
       medications: "Prescribed medication",
       allergies: "Dairy",
     },
+    {
+      name: "Fakhr",
+      age: 5,
+      gender: "male",
+      diagnosis: "Autism Spectrum Disorder",
+      medicalHistory: "Receiving therapy and school support",
+      medications: "None",
+      allergies: "None",
+      profileImageUrl: "/uploads/profiles/fakhr-profile.png",
+    },
   ],
 
   carePathTemplates: [

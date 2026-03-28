@@ -1,4 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -16,23 +18,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { getChildById, updateChild } from "../../../api/children.api";
-
-// Design system colors
-const colors = {
-    bgApp: "#FAF9F6",
-    bgCard: "#FFFFFF",
-    primary: "#7FB77E",
-    primaryLight: "#E8F5E8",
-    secondary: "#5F8F8B",
-    text: "#2F2F2F",
-    textSecondary: "#4A4A4A",
-    textMuted: "#8A8A8A",
-    border: "rgba(0, 0, 0, 0.08)",
-    error: "#D9534F",
-    errorLight: "#FDECEA",
-};
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getChildById, updateChild, uploadChildProfileImage } from "../../../api/children.api";
+import { ChildProfileAvatar } from "../../../components/ChildProfileAvatar";
+import {
+    cardShadow,
+    colors,
+    radius,
+    spacing,
+    typography,
+    touchTargets,
+} from "../../../theme";
 
 // Form steps
 const STEPS = [
@@ -70,7 +66,9 @@ const COMMON_ALLERGIES = [
 export default function EditChildScreen() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
+    const queryClient = useQueryClient();
     const [currentStep, setCurrentStep] = React.useState(1);
+    const [uploadingPhoto, setUploadingPhoto] = React.useState(false);
     const [showDatePicker, setShowDatePicker] = React.useState(false);
     const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
 
@@ -279,6 +277,68 @@ export default function EditChildScreen() {
         setCurrentStep(4);
     };
 
+    const pickProfilePhoto = async () => {
+        if (!id) return;
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+            Alert.alert("Permission needed", "Allow photo library access to set a profile picture.");
+            return;
+        }
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
+        if (result.canceled || !result.assets[0]) return;
+        let uri = result.assets[0].uri;
+        try {
+            const manipulated = await ImageManipulator.manipulateAsync(
+                uri,
+                [{ resize: { width: 512 } }],
+                { compress: 0.88, format: ImageManipulator.SaveFormat.JPEG }
+            );
+            uri = manipulated.uri;
+        } catch {
+            /* use original */
+        }
+        setUploadingPhoto(true);
+        try {
+            await uploadChildProfileImage(id as string, uri);
+            await queryClient.invalidateQueries({ queryKey: ["child", id] });
+            await queryClient.invalidateQueries({ queryKey: ["children"] });
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Could not upload photo.";
+            Alert.alert("Upload failed", message);
+        } finally {
+            setUploadingPhoto(false);
+        }
+    };
+
+    const clearProfilePhoto = () => {
+        if (!id) return;
+        Alert.alert("Remove photo", "Use initials instead of a photo?", [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Remove",
+                style: "destructive",
+                onPress: async () => {
+                    setUploadingPhoto(true);
+                    try {
+                        await updateChild(id as string, { clearProfileImage: true });
+                        await queryClient.invalidateQueries({ queryKey: ["child", id] });
+                        await queryClient.invalidateQueries({ queryKey: ["children"] });
+                    } catch (e: unknown) {
+                        const message = e instanceof Error ? e.message : "Could not remove photo.";
+                        Alert.alert("Error", message);
+                    } finally {
+                        setUploadingPhoto(false);
+                    }
+                },
+            },
+        ]);
+    };
+
     // Update child mutation
     const updateChildMutation = useMutation({
         mutationFn: (data: Parameters<typeof updateChild>[1]) => updateChild(id as string, data),
@@ -431,7 +491,7 @@ export default function EditChildScreen() {
                         onPress={() => step.id < currentStep && setCurrentStep(step.id)}
                     >
                         {currentStep > step.id ? (
-                            <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                            <Ionicons name="checkmark" size={14} color={colors.backgroundCard} />
                         ) : (
                             <Text
                                 style={[
@@ -468,6 +528,41 @@ export default function EditChildScreen() {
                     <Text style={styles.sectionSubtitle}>
                         Update your child basic details
                     </Text>
+                </View>
+            </View>
+
+            <View style={styles.profilePhotoRow}>
+                <ChildProfileAvatar
+                    name={
+                        `${formData.firstName} ${formData.lastName}`.trim() ||
+                        child?.name ||
+                        "Child"
+                    }
+                    profileImageUrl={child?.profileImageUrl}
+                    color={colors.primary}
+                    size={88}
+                />
+                <View style={styles.profilePhotoActions}>
+                    <Pressable
+                        style={[
+                            styles.photoBtn,
+                            (uploadingPhoto || updateChildMutation.isPending) && styles.photoBtnDisabled,
+                        ]}
+                        onPress={pickProfilePhoto}
+                        disabled={uploadingPhoto || updateChildMutation.isPending}
+                    >
+                        <Text style={styles.photoBtnText}>
+                            {uploadingPhoto ? "Working…" : "Change photo"}
+                        </Text>
+                    </Pressable>
+                    {child?.profileImageUrl ? (
+                        <Pressable
+                            onPress={clearProfilePhoto}
+                            disabled={uploadingPhoto || updateChildMutation.isPending}
+                        >
+                            <Text style={styles.photoRemoveText}>Remove photo</Text>
+                        </Pressable>
+                    ) : null}
                 </View>
             </View>
 
@@ -546,7 +641,7 @@ export default function EditChildScreen() {
                 disabled={updateChildMutation.isPending}
             >
                 <Text style={styles.submitButtonText}>Continue</Text>
-                <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                <Ionicons name="arrow-forward" size={20} color={colors.backgroundCard} />
             </Pressable>
         </View>
     );
@@ -597,7 +692,7 @@ export default function EditChildScreen() {
                         </Text>
                         {formData.diagnoses.includes(option.id) && (
                             <View style={styles.checkmark}>
-                                <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
+                                <Ionicons name="checkmark-circle" size={24} color={colors.backgroundCard} />
                             </View>
                         )}
                     </Pressable>
@@ -629,7 +724,7 @@ export default function EditChildScreen() {
                 disabled={updateChildMutation.isPending}
             >
                 <Text style={styles.submitButtonText}>Continue</Text>
-                <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                <Ionicons name="arrow-forward" size={20} color={colors.backgroundCard} />
             </Pressable>
         </View>
     );
@@ -735,7 +830,7 @@ export default function EditChildScreen() {
                 disabled={updateChildMutation.isPending}
             >
                 <Text style={styles.submitButtonText}>Continue</Text>
-                <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                <Ionicons name="arrow-forward" size={20} color={colors.backgroundCard} />
             </Pressable>
         </View>
     );
@@ -775,7 +870,7 @@ export default function EditChildScreen() {
                             {allergy}
                         </Text>
                         {formData.allergies.includes(allergy) && (
-                            <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                            <Ionicons name="checkmark" size={16} color={colors.backgroundCard} />
                         )}
                     </Pressable>
                 ))}
@@ -818,11 +913,11 @@ export default function EditChildScreen() {
                 disabled={updateChildMutation.isPending}
             >
                 {updateChildMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <ActivityIndicator size="small" color={colors.backgroundCard} />
                 ) : (
                     <>
                         <Text style={styles.doneButtonText}>Save Changes</Text>
-                        <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                        <Ionicons name="checkmark-circle" size={20} color={colors.backgroundCard} />
                     </>
                 )}
             </Pressable>
@@ -905,7 +1000,7 @@ export default function EditChildScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.bgApp,
+        backgroundColor: colors.background,
     },
     keyboardView: {
         flex: 1,
@@ -914,44 +1009,48 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: colors.bgApp,
+        paddingHorizontal: spacing.screenHorizontal,
+        paddingVertical: spacing.md,
+        backgroundColor: colors.background,
     },
     backBtn: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        backgroundColor: colors.bgCard,
+        width: touchTargets.minimum,
+        height: touchTargets.minimum,
+        borderRadius: radius.md,
+        backgroundColor: colors.backgroundCard,
         alignItems: "center",
         justifyContent: "center",
     },
     headerTitle: {
-        fontSize: 17,
-        fontWeight: "600",
+        fontSize: typography.h3,
+        lineHeight: typography.h3LineHeight,
+        fontWeight: typography.weightBold,
         color: colors.text,
     },
     headerRight: {
-        width: 40,
+        width: touchTargets.minimum,
     },
     stepIndicator: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        backgroundColor: colors.bgApp,
+        paddingHorizontal: spacing.screenHorizontal,
+        paddingVertical: spacing.md,
+        backgroundColor: colors.background,
     },
     stepDot: {
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: colors.border,
+        backgroundColor: colors.backgroundCard,
+        borderWidth: 2,
+        borderColor: colors.border,
         alignItems: "center",
         justifyContent: "center",
     },
     stepDotActive: {
         backgroundColor: colors.primary,
+        borderColor: colors.primary,
     },
     stepDotCurrent: {
         borderWidth: 2,
@@ -963,7 +1062,7 @@ const styles = StyleSheet.create({
         color: colors.textMuted,
     },
     stepNumberActive: {
-        color: "#FFFFFF",
+        color: colors.backgroundCard,
     },
     stepLine: {
         width: 40,
@@ -978,11 +1077,45 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        paddingHorizontal: 20,
+        paddingHorizontal: spacing.screenHorizontal,
         paddingBottom: 100,
     },
     formSection: {
-        marginTop: 8,
+        marginTop: spacing.sm,
+        backgroundColor: colors.backgroundCard,
+        borderRadius: radius.lg,
+        padding: spacing.lg,
+        ...cardShadow,
+    },
+    profilePhotoRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 16,
+        marginBottom: 24,
+    },
+    profilePhotoActions: {
+        flex: 1,
+        gap: 8,
+    },
+    photoBtn: {
+        alignSelf: "flex-start",
+        backgroundColor: colors.primary,
+        paddingVertical: spacing.sm + 2,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radius.md,
+    },
+    photoBtnDisabled: {
+        opacity: 0.6,
+    },
+    photoBtnText: {
+        color: colors.backgroundCard,
+        fontSize: 15,
+        fontWeight: "600",
+    },
+    photoRemoveText: {
+        color: colors.error,
+        fontSize: 14,
+        fontWeight: "500",
     },
     sectionHeader: {
         flexDirection: "row",
@@ -1018,11 +1151,12 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     input: {
-        backgroundColor: colors.bgCard,
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        fontSize: 16,
+        backgroundColor: colors.background,
+        borderRadius: radius.md,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md + 2,
+        fontSize: typography.body,
+        lineHeight: typography.bodyLineHeight,
         color: colors.text,
         borderWidth: 1,
         borderColor: colors.border,
@@ -1032,10 +1166,10 @@ const styles = StyleSheet.create({
         paddingTop: 14,
     },
     dateInput: {
-        backgroundColor: colors.bgCard,
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
+        backgroundColor: colors.background,
+        borderRadius: radius.md,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md + 2,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
@@ -1055,8 +1189,8 @@ const styles = StyleSheet.create({
     },
     genderOption: {
         flex: 1,
-        backgroundColor: colors.bgCard,
-        borderRadius: 12,
+        backgroundColor: colors.background,
+        borderRadius: radius.md,
         paddingVertical: 14,
         alignItems: "center",
         borderWidth: 1,
@@ -1083,8 +1217,8 @@ const styles = StyleSheet.create({
     },
     diagnosisCard: {
         width: "47%",
-        backgroundColor: colors.bgCard,
-        borderRadius: 12,
+        backgroundColor: colors.background,
+        borderRadius: radius.md,
         padding: 16,
         borderWidth: 2,
         borderColor: colors.border,
@@ -1101,7 +1235,7 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     diagnosisLabelActive: {
-        color: "#FFFFFF",
+        color: colors.backgroundCard,
     },
     diagnosisDescription: {
         fontSize: 12,
@@ -1109,7 +1243,7 @@ const styles = StyleSheet.create({
         lineHeight: 16,
     },
     diagnosisDescriptionActive: {
-        color: "#FFFFFF",
+        color: colors.backgroundCard,
         opacity: 0.9,
     },
     checkmark: {
@@ -1118,8 +1252,8 @@ const styles = StyleSheet.create({
         right: 8,
     },
     medicationCard: {
-        backgroundColor: colors.bgCard,
-        borderRadius: 12,
+        backgroundColor: colors.background,
+        borderRadius: radius.md,
         padding: 16,
         marginBottom: 12,
         borderWidth: 1,
@@ -1171,8 +1305,8 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
-        backgroundColor: colors.bgCard,
-        borderRadius: 20,
+        backgroundColor: colors.background,
+        borderRadius: radius.xl,
         paddingHorizontal: 16,
         paddingVertical: 10,
         borderWidth: 1,
@@ -1188,17 +1322,18 @@ const styles = StyleSheet.create({
         color: colors.text,
     },
     allergyChipTextActive: {
-        color: "#FFFFFF",
+        color: colors.backgroundCard,
     },
     submitButton: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        gap: 8,
+        gap: spacing.sm,
         backgroundColor: colors.primary,
-        borderRadius: 12,
-        paddingVertical: 16,
-        marginTop: 8,
+        borderRadius: radius.md,
+        paddingVertical: spacing.lg,
+        minHeight: touchTargets.button,
+        marginTop: spacing.sm,
     },
     submitButtonDisabled: {
         opacity: 0.6,
@@ -1206,17 +1341,18 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: 16,
         fontWeight: "600",
-        color: "#FFFFFF",
+        color: colors.backgroundCard,
     },
     doneButton: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        gap: 8,
+        gap: spacing.sm,
         backgroundColor: colors.primary,
-        borderRadius: 12,
-        paddingVertical: 16,
-        marginTop: 8,
+        borderRadius: radius.md,
+        paddingVertical: spacing.lg,
+        minHeight: touchTargets.button,
+        marginTop: spacing.sm,
     },
     doneButtonDisabled: {
         opacity: 0.6,
@@ -1224,7 +1360,7 @@ const styles = StyleSheet.create({
     doneButtonText: {
         fontSize: 16,
         fontWeight: "600",
-        color: "#FFFFFF",
+        color: colors.backgroundCard,
     },
     modalOverlay: {
         flex: 1,
@@ -1232,17 +1368,17 @@ const styles = StyleSheet.create({
         justifyContent: "flex-end",
     },
     modalContent: {
-        backgroundColor: colors.bgCard,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        paddingBottom: Platform.OS === "ios" ? 40 : 20,
+        backgroundColor: colors.backgroundCard,
+        borderTopLeftRadius: radius.xl,
+        borderTopRightRadius: radius.xl,
+        paddingBottom: Platform.OS === "ios" ? spacing.pageBottom : spacing.screenHorizontal,
     },
     modalHeader: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingHorizontal: 20,
-        paddingVertical: 16,
+        paddingHorizontal: spacing.screenHorizontal,
+        paddingVertical: spacing.lg,
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
     },
@@ -1292,6 +1428,6 @@ const styles = StyleSheet.create({
     backButtonText: {
         fontSize: 15,
         fontWeight: "600",
-        color: "#FFFFFF",
+        color: colors.backgroundCard,
     },
 });

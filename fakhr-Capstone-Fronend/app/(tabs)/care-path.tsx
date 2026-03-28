@@ -10,176 +10,219 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  CarePathBottomNav,
+  type CarePathTabId,
+  CarePathStatCard,
+  CarePathTaskRow,
+  CarePathTodayFocus,
+  CarePathWeeklyProgress,
+  carePathColors,
+  carePathRadii,
+  carePathShadowSoft,
+  carePathSpacing,
+} from "../../components/care-path";
 
-// Design system colors
-const colors = {
-  bgApp: "#FAF9F6",
-  bgCard: "#FFFFFF",
-  primary: "#7FB77E",
-  text: "#2F2F2F",
-  textSecondary: "#4A4A4A",
-  textMuted: "#8A8A8A",
-  border: "rgba(0, 0, 0, 0.06)",
-};
+const FOCUS_DATE = new Date(2023, 9, 24);
 
-// Mock services data
-const SERVICES = [
-  {
-    id: "1",
-    name: "Speech Therapy",
-    description: "Improve communication and language skills",
-    icon: "chatbubble-outline",
-  },
-  {
-    id: "2",
-    name: "Occupational Therapy",
-    description: "Develop daily living and motor skills",
-    icon: "hand-left-outline",
-  },
-  {
-    id: "3",
-    name: "Behavioral Therapy",
-    description: "Address behavioral challenges with proven techniques",
-    icon: "heart-outline",
-  },
-  {
-    id: "4",
-    name: "Physical Therapy",
-    description: "Enhance movement and physical development",
-    icon: "fitness-outline",
-  },
-  {
-    id: "5",
-    name: "Educational Support",
-    description: "Academic assistance and learning strategies",
-    icon: "school-outline",
-  },
-  {
-    id: "6",
-    name: "Family Counseling",
-    description: "Support for the whole family",
-    icon: "people-outline",
-  },
-];
+function formatFocusDate(d: Date): string {
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
-export default function ServicesScreen() {
+export default function CarePathScreen() {
   const router = useRouter();
+  const [progressPercent] = React.useState(75);
+  const [notes, setNotes] = React.useState("");
+  const [rating, setRating] = React.useState(3);
+  const [bottomTab, setBottomTab] = React.useState<CarePathTabId>("home");
 
-  const handleServicePress = (service: (typeof SERVICES)[0]) => {
-    Alert.alert(
-      service.name,
-      `${service.description}\n\nService details page coming soon.`
-    );
+  const onTabPress = (id: CarePathTabId) => {
+    setBottomTab(id);
+    switch (id) {
+      case "home":
+        router.replace("/(tabs)");
+        break;
+      case "path":
+        break;
+      case "stats":
+        router.push("/(tabs)/plan/progress");
+        break;
+      case "profile":
+        router.push("/(tabs)/profile");
+        break;
+      default:
+        break;
+    }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.title}>Services</Text>
-        <Text style={styles.subtitle}>
-          Browse available services for your child
-        </Text>
-
-        <View style={styles.servicesList}>
-          {SERVICES.map((service) => (
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <View style={styles.root}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.header}>
             <Pressable
-              key={service.id}
-              style={({ pressed }) => [
-                styles.serviceCard,
-                pressed && { opacity: 0.8 },
-              ]}
-              onPress={() => handleServicePress(service)}
+              style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}
+              onPress={() =>
+                Alert.alert("Menu", "Navigation menu (placeholder).")
+              }
+              hitSlop={12}
             >
-              <View style={styles.serviceIcon}>
-                <Ionicons
-                  name={service.icon as any}
-                  size={24}
-                  color={colors.primary}
-                />
-              </View>
-              <View style={styles.serviceContent}>
-                <Text style={styles.serviceName}>{service.name}</Text>
-                <Text style={styles.serviceDescription}>
-                  {service.description}
-                </Text>
-              </View>
+              <Ionicons name="menu-outline" size={26} color={carePathColors.textPrimary} />
+            </Pressable>
+            <Text style={styles.headerTitle}>Care Path</Text>
+            <Pressable
+              style={({ pressed }) => [styles.calendarBtn, pressed && styles.pressed]}
+              onPress={() =>
+                Alert.alert("Calendar", "Calendar (placeholder).")
+              }
+            >
               <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.textMuted}
+                name="calendar-outline"
+                size={22}
+                color={carePathColors.textPrimary}
               />
             </Pressable>
-          ))}
-        </View>
-      </ScrollView>
+          </View>
+
+          <CarePathWeeklyProgress
+            percent={progressPercent}
+            supportingText="Almost there! Just 6 more tasks to hit your goal."
+          />
+
+          <View style={styles.statsRow}>
+            <CarePathStatCard
+              icon="flame-outline"
+              label="Current Streak"
+              value="12 Days"
+              trend="+2 days"
+            />
+            <View style={styles.statsGap} />
+            <CarePathStatCard
+              icon="checkmark-circle-outline"
+              label="Completed"
+              value="18/24"
+              trend="+3 today"
+            />
+          </View>
+
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionTitle}>Today&apos;s Focus</Text>
+            <Text style={styles.sectionDate}>{formatFocusDate(FOCUS_DATE)}</Text>
+          </View>
+
+          <CarePathTodayFocus
+            title="Morning Mindfulness"
+            description="15 minutes of guided meditation to start the day."
+            badge="PRIORITY"
+            notes={notes}
+            onNotesChange={setNotes}
+            rating={rating}
+            onRatingChange={setRating}
+            onDone={() => Alert.alert("Done", "Great job completing this task.")}
+            onSkip={() => Alert.alert("Skip", "Task skipped for now.")}
+          />
+
+          <CarePathTaskRow
+            title="Hydration Goal"
+            subtitle="Drink 2.5L throughout the day"
+            icon="water-outline"
+            completed={false}
+            onToggle={() => Alert.alert("Hydration", "Mark complete (placeholder).")}
+          />
+
+          <CarePathTaskRow
+            title="Short Afternoon Walk"
+            subtitle=""
+            icon="walk-outline"
+            completed
+            completedAt="14:30"
+          />
+
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
+
+        <CarePathBottomNav active={bottomTab} onTabPress={onTabPress} />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: colors.bgApp,
+    backgroundColor: carePathColors.background,
+  },
+  root: {
+    flex: 1,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 100,
+    paddingHorizontal: carePathSpacing.xl,
+    paddingTop: carePathSpacing.sm,
+    paddingBottom: carePathSpacing.lg,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    marginBottom: 24,
-  },
-  servicesList: {
-    gap: 12,
-  },
-  serviceCard: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.bgCard,
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    justifyContent: "space-between",
+    marginBottom: carePathSpacing.xl,
   },
-  serviceIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: `${colors.primary}15`,
+  iconBtn: {
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 14,
   },
-  serviceContent: {
-    flex: 1,
+  calendarBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: carePathRadii.sm,
+    backgroundColor: carePathColors.card,
+    alignItems: "center",
+    justifyContent: "center",
+    ...carePathShadowSoft,
   },
-  serviceName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: 4,
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: carePathColors.textPrimary,
   },
-  serviceDescription: {
+  pressed: {
+    opacity: 0.7,
+  },
+  statsRow: {
+    flexDirection: "row",
+    marginBottom: carePathSpacing.xxl,
+  },
+  statsGap: {
+    width: carePathSpacing.md,
+  },
+  sectionHead: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    marginBottom: carePathSpacing.md,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: carePathColors.textPrimary,
+  },
+  sectionDate: {
     fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 18,
+    color: carePathColors.textSecondary,
+  },
+  bottomSpacer: {
+    height: carePathSpacing.xxl,
   },
 });

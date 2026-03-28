@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 import { getChildById } from "../../../api/children.api";
+import { ChildProfileAvatar } from "../../../components/ChildProfileAvatar";
 
 // Design system colors
 const colors = {
@@ -206,16 +207,13 @@ export default function ChildDetailsScreen() {
       >
         {/* Profile Hero */}
         <View style={styles.heroSection}>
-          <View
-            style={[
-              styles.heroAvatar,
-              { backgroundColor: `${colors.primary}20` },
-            ]}
-          >
-            <Text style={[styles.heroAvatarText, { color: colors.primary }]}>
-              {childData.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-            </Text>
-          </View>
+          <ChildProfileAvatar
+            name={childData.name}
+            profileImageUrl={childData.profileImageUrl}
+            color={colors.primary}
+            size={112}
+            style={{ marginBottom: 16 }}
+          />
 
           <Text style={styles.childName}>{childData.name}</Text>
           {childData.age && (
@@ -403,18 +401,6 @@ const styles = StyleSheet.create({
   heroSection: {
     alignItems: "center",
     paddingVertical: 24,
-  },
-  heroAvatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-  },
-  heroAvatarText: {
-    fontSize: 32,
-    fontWeight: "700",
   },
   childName: {
     fontSize: 24,

@@ -4,7 +4,8 @@ import React from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
-import { getChildren, Child } from "../../../api/children.api";
+import { getChildren } from "../../../api/children.api";
+import { ChildProfileAvatar } from "../../../components/ChildProfileAvatar";
 
 // Design system colors
 const colors = {
@@ -212,17 +213,13 @@ export default function ManageChildrenScreen() {
                 ]}
                 onPress={() => handleViewChild(child.id)}
               >
-                {/* Child Avatar */}
-                <View
-                  style={[
-                    styles.childAvatar,
-                    { backgroundColor: `${child.color}20` },
-                  ]}
-                >
-                  <Text style={[styles.childAvatarText, { color: child.color }]}>
-                    {child.name.split(" ").map((n) => n[0]).join("")}
-                  </Text>
-                </View>
+                <ChildProfileAvatar
+                  name={child.name}
+                  profileImageUrl={child.profileImageUrl}
+                  color={child.color}
+                  size={52}
+                  style={{ marginRight: 14 }}
+                />
 
                 {/* Child Info */}
                 <View style={styles.childInfo}>
@@ -415,18 +412,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
-  },
-  childAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 14,
-  },
-  childAvatarText: {
-    fontSize: 18,
-    fontWeight: "700",
   },
   childInfo: {
     flex: 1,

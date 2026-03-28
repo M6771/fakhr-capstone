@@ -9,6 +9,8 @@ export interface IChild extends Document {
   medicalHistory?: string;
   medications?: string;
   allergies?: string;
+  /** Public URL path served from /uploads (e.g. /uploads/profiles/child-profile-xxx.jpg) */
+  profileImageUrl?: string;
   parentId: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +50,10 @@ const childSchema = new Schema<IChild>(
       trim: true,
     },
     allergies: {
+      type: String,
+      trim: true,
+    },
+    profileImageUrl: {
       type: String,
       trim: true,
     },
