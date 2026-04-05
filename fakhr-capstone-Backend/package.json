@@ -8,7 +8,8 @@
     "test:watch": "jest --watch",
     "test:ci": "jest --ci --coverage --maxWorkers=2",
     "start": "nodemon src/app.ts",
-    "seed": "ts-node src/seed/seed.ts"
+    "seed": "ts-node src/seed/seed.ts",
+    "test:api": "bash test-api.sh"
   },
   "keywords": [],
   "author": "",
@@ -42,6 +43,7 @@
     "supertest": "^7.0.0",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "nodemon": "^3.0.2"
   }
 }

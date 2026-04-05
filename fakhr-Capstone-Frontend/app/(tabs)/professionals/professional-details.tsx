@@ -4,6 +4,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -35,8 +36,8 @@ export default function ProfessionalDetailsScreen() {
   const { data: professional, isLoading, error } = useQuery({
     queryKey: ["professional", id],
     queryFn: () => getProfessionalDetails(id as string),
-    enabled: !!id,
-    retry: false,
+    enabled: !!id && id !== "undefined",
+    retry: 1,
   });
 
   const handleBookAppointment = () => {
@@ -170,10 +171,12 @@ export default function ProfessionalDetailsScreen() {
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <View style={styles.statIconWrap}>
-                <Ionicons name="location-outline" size={18} color={colors.secondary} />
+                <Ionicons name="business-outline" size={18} color={colors.secondary} />
               </View>
-              <Text style={styles.statValue}>2.5 km</Text>
-              <Text style={styles.statLabel}>Away</Text>
+              <Text style={styles.statValue} numberOfLines={1} ellipsizeMode="tail">
+                {professional.centerName || "—"}
+              </Text>
+              <Text style={styles.statLabel}>Center</Text>
             </View>
           </View>
         </View>
@@ -199,10 +202,42 @@ export default function ProfessionalDetailsScreen() {
           <View style={styles.quickInfoRow}>
             <Ionicons name="location-outline" size={20} color={colors.primary} />
             <View style={styles.quickInfoContent}>
-              <Text style={styles.quickInfoLabel}>Location</Text>
-              <Text style={styles.quickInfoValue}>{professional.location}</Text>
+              <Text style={styles.quickInfoLabel}>Center Location</Text>
+              <Text style={styles.quickInfoValue}>
+                {professional.centerAddress || professional.location || "—"}
+              </Text>
             </View>
           </View>
+          {(() => {
+            const phone = professional.phone?.trim();
+            const email = professional.email?.trim();
+            const centerPhone = professional.centerPhone?.toString?.()?.trim();
+            const centerEmail = professional.centerEmail?.toString?.()?.trim();
+            const contactPhone = phone || centerPhone;
+            const contactEmail = email || centerEmail;
+            const contactLabel = phone || email ? "Contact Professional" : "Contact via Center";
+            const contactValue = contactPhone || contactEmail || "—";
+            if (!contactValue || contactValue === "—") return null;
+            return (
+              <>
+                <View style={styles.quickInfoDivider} />
+                <Pressable
+                  style={({ pressed }) => [styles.quickInfoRow, pressed && { opacity: 0.7 }]}
+                  onPress={() => {
+                    if (contactPhone) Linking.openURL(`tel:${contactPhone}`);
+                    else if (contactEmail) Linking.openURL(`mailto:${contactEmail}`);
+                  }}
+                >
+                  <Ionicons name="call-outline" size={20} color={colors.primary} />
+                  <View style={styles.quickInfoContent}>
+                    <Text style={styles.quickInfoLabel}>{contactLabel}</Text>
+                    <Text style={styles.quickInfoValue}>{contactValue}</Text>
+                  </View>
+                  <Ionicons name="open-outline" size={18} color={colors.textMuted} />
+                </Pressable>
+              </>
+            );
+          })()}
         </View>
 
         {/* About Section */}

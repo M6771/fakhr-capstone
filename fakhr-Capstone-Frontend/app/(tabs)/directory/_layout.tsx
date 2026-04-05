@@ -1,10 +1,23 @@
-import { Stack } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
+import { Pressable } from "react-native";
 import { colors, typography } from "../../../theme";
 
 /**
  * Directory Stack Layout — Directory screens with back button
  */
 export default function DirectoryLayout() {
+  const router = useRouter();
+  const backButton = () => (
+    <Pressable
+      onPress={() => router.back()}
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, padding: 8 })}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+    >
+      <Ionicons name="arrow-back" size={24} color={colors.primary} />
+    </Pressable>
+  );
+
   return (
     <Stack
       screenOptions={{
@@ -24,6 +37,8 @@ export default function DirectoryLayout() {
         options={{
           headerShown: true,
           headerTitle: "Health Centers",
+          headerTitleAlign: "center",
+          headerLeft: backButton,
           headerTitleStyle: {
             fontSize: typography.h2,
             fontWeight: typography.weightBold,
@@ -36,6 +51,8 @@ export default function DirectoryLayout() {
         options={{
           headerShown: true,
           headerTitle: "Professionals",
+          headerTitleAlign: "center",
+          headerLeft: backButton,
           headerTitleStyle: {
             fontSize: typography.h2,
             fontWeight: typography.weightBold,
@@ -48,6 +65,8 @@ export default function DirectoryLayout() {
         options={{
           headerShown: true,
           headerTitle: "Center Details",
+          headerTitleAlign: "center",
+          headerLeft: backButton,
           headerTitleStyle: {
             fontSize: typography.h2,
             fontWeight: typography.weightBold,
@@ -60,6 +79,8 @@ export default function DirectoryLayout() {
         options={{
           headerShown: true,
           headerTitle: "Professional Details",
+          headerTitleAlign: "center",
+          headerLeft: backButton,
           headerTitleStyle: {
             fontSize: typography.h2,
             fontWeight: typography.weightBold,

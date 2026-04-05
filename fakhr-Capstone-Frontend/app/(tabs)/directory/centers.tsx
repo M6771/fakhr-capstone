@@ -91,10 +91,10 @@ export default function CentersScreen() {
         <Text style={styles.title}>Health Centers</Text>
         {centers?.map((center: HealthCenter) => (
           <TouchableOpacity
-            key={center.id}
+            key={center.id || (center as { _id?: string })._id}
             style={[styles.centerCard, cardShadow]}
             onPress={() =>
-              router.push(`/(tabs)/directory/center-details?id=${center.id}`)
+              router.push(`/(tabs)/directory/center-details?id=${center.id || (center as { _id?: string })._id}`)
             }
             activeOpacity={0.85}
           >

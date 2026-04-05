@@ -21,11 +21,13 @@ export const getCenters = async (filters?: CenterFilters): Promise<HealthCenter[
     params.specialties = filters.specialties.join(",");
   }
 
-  const response = await instance.get<{ success: boolean; data: { centers: HealthCenter[]; count: number } }>("/directory/centers", { params });
-  // axios interceptor returns response.data directly, so response is already the full response object
-  const data = (response as unknown as { success: boolean; data: { centers: HealthCenter[]; count: number } }).data;
-  // Ensure we return an array
-  if (Array.isArray(data.centers)) {
+  const response = await instance.get<{ success: boolean; data: HealthCenter[] | { centers: HealthCenter[] }; pagination?: unknown }>("/directory/centers", { params });
+  // Backend returns data as array directly; handle both formats
+  const data = (response as unknown as { success: boolean; data: HealthCenter[] | { centers: HealthCenter[] } }).data;
+  if (Array.isArray(data)) {
+    return data;
+  }
+  if (data && typeof data === "object" && Array.isArray(data.centers)) {
     return data.centers;
   }
   return [];
@@ -129,9 +131,12 @@ export const getProfessionalTags = async (): Promise<string[]> => {
  * GET /api/directory/centers/:centerId
  */
 export const getCenterDetails = async (centerId: string): Promise<HealthCenter> => {
-  const response = await instance.get<{ success: boolean; data: { center: HealthCenter } }>(`/directory/centers/${centerId}`);
-  // axios interceptor returns response.data directly, so response is already the full response object
-  return (response as unknown as { success: boolean; data: { center: HealthCenter } }).data.center;
+  const response = await instance.get<{ success: boolean; data: HealthCenter | { center: HealthCenter } }>(`/directory/centers/${centerId}`);
+  const data = (response as unknown as { success: boolean; data: HealthCenter | { center: HealthCenter } }).data;
+  if (data && typeof data === "object" && "center" in data) {
+    return data.center;
+  }
+  return data as HealthCenter;
 };
 
 

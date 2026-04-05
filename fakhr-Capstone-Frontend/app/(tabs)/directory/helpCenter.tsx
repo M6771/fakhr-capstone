@@ -11,7 +11,7 @@ import {
     Platform,
     ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { sendHelpMessage } from "../../../api/helpCenter.api";
@@ -29,8 +29,11 @@ interface Message {
     timestamp: Date;
 }
 
+const TAB_BAR_HEIGHT = 56;
+
 export default function HelpCenterScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const [messages, setMessages] = useState<Message[]>([
         {
             id: "1",
@@ -160,8 +163,16 @@ export default function HelpCenterScreen() {
                     )}
                 </ScrollView>
 
-                {/* Input Area */}
-                <View style={styles.inputContainer}>
+                {/* Input Area - padding for tab bar overlay */}
+                <View
+                    style={[
+                        styles.inputContainer,
+                        {
+                            paddingBottom:
+                                Math.max(insets.bottom, 8) + TAB_BAR_HEIGHT + spacing.md,
+                        },
+                    ]}
+                >
                     <TextInput
                         style={styles.input}
                         placeholder="Type your message..."
@@ -299,6 +310,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background,
         borderTopWidth: 1,
         borderTopColor: colors.border,
+        flexShrink: 0,
     },
     input: {
         flex: 1,

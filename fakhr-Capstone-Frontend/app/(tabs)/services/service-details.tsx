@@ -97,18 +97,35 @@ export default function ServiceDetailsScreen() {
     );
   }
 
+  const getServiceSpecialty = (): string | undefined => {
+    const map: Record<string, string> = {
+      "Speech & Language Therapy": "speech",
+      "Occupational Therapy": "occupational",
+      "ABA Therapy": "behavioral",
+      "Psychological Assessment": "behavioral",
+      "Physical Therapy": "physical",
+      "Parent Coaching": "behavioral",
+      "Early Intervention": "speech",
+      "School Readiness": "educational",
+    };
+    return map[service.name];
+  };
+
+  const handleViewProviders = () => {
+    const specialty = getServiceSpecialty();
+    router.push({
+      pathname: "/(tabs)/professionals",
+      params: specialty ? { specialty } : { search: service.name },
+    });
+  };
+
   const handleBookService = () => {
     Alert.alert(
       "Book Service",
-      `Would you like to book a ${service.name} session?`,
+      `Would you like to find providers for ${service.name}?`,
       [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Find Providers",
-          onPress: () => {
-            Alert.alert("Coming Soon", "Provider booking will be available soon!");
-          },
-        },
+        { text: "Find Providers", onPress: handleViewProviders },
       ]
     );
   };
@@ -231,9 +248,7 @@ export default function ServiceDetailsScreen() {
               styles.viewProvidersBtn,
               pressed && { opacity: 0.8 },
             ]}
-            onPress={() => {
-              Alert.alert("Coming Soon", "Provider directory will be available soon!");
-            }}
+            onPress={handleViewProviders}
           >
             <Text style={styles.viewProvidersBtnText}>View All</Text>
             <Ionicons name="arrow-forward" size={16} color={colors.primary} />

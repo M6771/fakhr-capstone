@@ -48,6 +48,9 @@ export interface Professional {
   image?: string;
   centerId?: string;
   centerName?: string;
+  centerAddress?: string;
+  centerPhone?: string;
+  centerEmail?: string;
   createdAt?: string;
   updatedAt?: string;
 }

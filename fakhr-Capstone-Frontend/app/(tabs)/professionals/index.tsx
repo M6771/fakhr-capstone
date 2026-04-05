@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -38,16 +38,39 @@ const SPECIALIZATIONS = [
   { id: "educational", label: "Educational", icon: "school-outline" },
 ];
 
+const VALID_SPECIALTIES = ["speech", "behavioral", "occupational", "physical", "educational"];
+
 export default function ProfessionalsScreen() {
   const router = useRouter();
-  const [selectedFilter, setSelectedFilter] = React.useState("all");
+  const { search: searchParam, specialty: specialtyParam } = useLocalSearchParams<{
+    search?: string;
+    specialty?: string;
+  }>();
+  const [selectedFilter, setSelectedFilter] = React.useState(() => {
+    if (specialtyParam && VALID_SPECIALTIES.includes(specialtyParam)) return specialtyParam;
+    return "all";
+  });
+  const [searchQuery, setSearchQuery] = React.useState(() => {
+    if (specialtyParam) return "";
+    return searchParam || "";
+  });
+
+  useEffect(() => {
+    if (specialtyParam && VALID_SPECIALTIES.includes(specialtyParam)) {
+      setSelectedFilter(specialtyParam);
+      setSearchQuery("");
+    } else if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+  }, [specialtyParam, searchParam]);
 
   // Fetch professionals from API
   const { data: professionals = [], isLoading, error } = useQuery({
-    queryKey: ["professionals", selectedFilter],
+    queryKey: ["professionals", selectedFilter, searchQuery],
     queryFn: () =>
       getProfessionals({
         specialty: selectedFilter === "all" ? undefined : selectedFilter,
+        search: searchQuery || undefined,
       }),
     retry: false,
   });
@@ -68,12 +91,16 @@ export default function ProfessionalsScreen() {
 
   const filteredProfessionals = professionals;
 
-  const handleProfessionalPress = (professionalId: string) => {
+  const handleProfessionalPress = (professional: { id?: string; _id?: string }) => {
+    const id = professional.id || (professional as { _id?: string })._id;
+    if (!id) return;
     router.push({
       pathname: "/(tabs)/professionals/professional-details",
-      params: { id: professionalId },
+      params: { id: String(id) },
     });
   };
+
+  const showBackButton = !!(specialtyParam || searchParam);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -84,9 +111,22 @@ export default function ProfessionalsScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerIcon}>
-            <Ionicons name="people" size={24} color="#FFFFFF" />
-          </View>
+          {showBackButton ? (
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => [
+                styles.backButton,
+                pressed && { opacity: 0.7 },
+              ]}
+              hitSlop={8}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
+            </Pressable>
+          ) : (
+            <View style={styles.headerIcon}>
+              <Ionicons name="people" size={24} color="#FFFFFF" />
+            </View>
+          )}
           <View style={styles.headerText}>
             <Text style={styles.title}>Professionals</Text>
             <Text style={styles.subtitle}>
@@ -95,11 +135,32 @@ export default function ProfessionalsScreen() {
           </View>
         </View>
 
-        {/* Search Bar Placeholder */}
-        <Pressable style={styles.searchBar}>
-          <Ionicons name="search-outline" size={20} color={colors.textMuted} />
-          <Text style={styles.searchPlaceholder}>Search professionals...</Text>
-        </Pressable>
+        {/* Search / Service filter hint */}
+        {searchQuery || (specialtyParam && selectedFilter !== "all") ? (
+          <View style={styles.searchHint}>
+            <Ionicons name="filter" size={18} color={colors.primary} />
+            <Text style={styles.searchHintText}>
+              {searchQuery
+                ? `Showing providers for: ${searchQuery}`
+                : `Showing ${SPECIALIZATIONS.find((s) => s.id === selectedFilter)?.label || selectedFilter} specialists`}
+            </Text>
+            <Pressable
+              onPress={() => {
+                setSearchQuery("");
+                setSelectedFilter("all");
+                router.replace("/(tabs)/professionals");
+              }}
+              hitSlop={8}
+            >
+              <Text style={styles.clearSearchText}>Clear</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable style={styles.searchBar}>
+            <Ionicons name="search-outline" size={20} color={colors.textMuted} />
+            <Text style={styles.searchPlaceholder}>Search professionals...</Text>
+          </Pressable>
+        )}
 
         {/* Filter Section */}
         <Text style={styles.sectionLabel}>Filter by Specialization</Text>
@@ -205,12 +266,12 @@ export default function ProfessionalsScreen() {
               ) : (
                 filteredProfessionals.map((professional) => (
                   <Pressable
-                    key={professional.id}
+                    key={professional.id || (professional as { _id?: string })._id}
                     style={({ pressed }) => [
                       styles.professionalCard,
                       pressed && { transform: [{ scale: 0.98 }] },
                     ]}
-                    onPress={() => handleProfessionalPress(professional.id)}
+                    onPress={() => handleProfessionalPress(professional)}
                   >
                     {/* Avatar */}
                     <View
@@ -302,6 +363,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.bgCard,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
   headerIcon: {
     width: 52,
     height: 52,
@@ -341,6 +411,29 @@ const styles = StyleSheet.create({
   searchPlaceholder: {
     fontSize: 15,
     color: colors.textMuted,
+  },
+  searchHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: `${colors.primary}15`,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 20,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: `${colors.primary}40`,
+  },
+  searchHintText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: "500",
+  },
+  clearSearchText: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: "600",
   },
   // Filter Section
   sectionLabel: {

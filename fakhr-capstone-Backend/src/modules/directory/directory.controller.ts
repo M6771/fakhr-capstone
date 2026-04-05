@@ -1,5 +1,7 @@
-import { Request, Response } from "express";
+import mongoose from "mongoose";
+import { Request, Response, NextFunction } from "express";
 import Center from "../../models/Center.model";
+import Professional from "../../models/Professional.model";
 
 // محافظات الكويت 
 const KUWAIT_CITIES = [
@@ -12,103 +14,54 @@ const KUWAIT_CITIES = [
 ];
 
 
-export const getCenters = async (req: Request, res: Response) => {
+export const getCenters = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const {
-      type,
-      city,
-      specialties,
-      search,
-      page = 1,
-      limit = 10,
-      sortBy = "rating",
-      order = "desc",
-    } = req.query;
+    const { city, type, search, specialty } = req.query;
 
-    
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
 
-    if (type && (type === "public" || type === "private")) {
-      filter.type = type;
+    if (city) filter.city = String(city);
+    if (type) filter.type = String(type);
+
+    if (specialty) {
+      filter.specialties = { $in: [String(specialty)] };
     }
 
-    if (city && typeof city === "string") {
-      filter.city = { $regex: new RegExp(city, "i") };
+    if (search) {
+      const q = String(search).trim();
+      filter.$or = [
+        { name: { $regex: q, $options: "i" } },
+        { description: { $regex: q, $options: "i" } },
+        { address: { $regex: q, $options: "i" } },
+        { specialties: { $regex: q, $options: "i" } },
+      ];
     }
 
-    if (specialties && typeof specialties === "string") {
-        const specialtiesArray = specialties.split(",");
-        filter.specialties = { 
-            $in: specialtiesArray.map(s => new RegExp(s.trim(), "i")) 
-          };
-    }
-
-    if (search && typeof search === "string") {
-      filter.name = { $regex: new RegExp(search, "i") };
-    }
-
-    
-    const pageNum = Math.max(1, parseInt(page as string));
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit as string)));
-    const skip = (pageNum - 1) * limitNum;
-
-    
-    const sortOrder = order === "asc" ? 1 : -1;
-    const sortField = ["rating", "name", "createdAt"].includes(sortBy as string)
-      ? (sortBy as string)
-      : "rating";
-
-    const [centers, totalCount] = await Promise.all([
-      Center.find(filter)
-        .sort({ [sortField]: sortOrder })
-        .skip(skip)
-        .limit(limitNum)
-        .select("-reviews"),
-      Center.countDocuments(filter),
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: centers,
-      pagination: {
-        currentPage: pageNum,
-        totalPages: Math.ceil(totalCount / limitNum),
-        totalItems: totalCount,
-        itemsPerPage: limitNum,
-      },
+    const centers = await Center.find(filter).sort({ createdAt: -1 }).select("-reviews").lean();
+    const withId = centers.map((c) => {
+      const doc = c as { _id?: { toString?: () => string } };
+      return { ...c, id: doc._id?.toString?.() ?? doc._id };
     });
-  } catch (error) {
-    console.error("Error fetching centers:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch centers",
-    });
+    res.status(200).json({ success: true, data: withId });
+  } catch (err) {
+    next(err);
   }
 };
 
 
-export const getCenterById = async (req: Request, res: Response) => {
+export const getCenterById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
-    const center = await Center.findById(id);
-
-    if (!center) {
-      return res.status(404).json({
-        success: false,
-        message: "Center not found",
-      });
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    if (!id || typeof id !== "string" || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid center ID format" });
     }
-
-    res.status(200).json({
-      success: true,
-      data: center,
-    });
-  } catch (error) {
-    console.error("Error fetching center:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch center",
-    });
+    const center = await Center.findById(id).lean();
+    if (!center) return res.status(404).json({ success: false, message: "Center not found" });
+    const c = center as { _id?: { toString?: () => string } | string };
+    const withId = { ...center, id: typeof c._id === "string" ? c._id : c._id?.toString?.() ?? "" };
+    res.status(200).json({ success: true, data: withId });
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -200,3 +153,87 @@ export const createCenter = async (req: Request, res: Response) => {
       });
     }
   };
+
+export const getProfessionals = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { specialty, city, centerId, search, verified } = req.query;
+
+    const filter: Record<string, unknown> = {};
+
+    if (specialty) filter.specialty = String(specialty);
+    if (city) filter.location = { $regex: String(city), $options: "i" };
+    if (centerId) filter.centerId = String(centerId);
+
+    if (verified !== undefined) {
+      filter.verified = String(verified) === "true";
+    }
+
+    if (search) {
+      const q = String(search).trim();
+      filter.$or = [
+        { name: { $regex: q, $options: "i" } },
+        { specialtyLabel: { $regex: q, $options: "i" } },
+        { bio: { $regex: q, $options: "i" } },
+        { location: { $regex: q, $options: "i" } },
+        { services: { $in: [new RegExp(q, "i")] } },
+      ];
+    }
+
+    const professionals = await Professional.find(filter)
+      .populate("centerId")
+      .sort({ verified: -1, rating: -1 })
+      .lean();
+
+    const withId = professionals.map((p) => {
+      const doc = p as { _id?: { toString?: () => string } };
+      return { ...p, id: doc._id?.toString?.() ?? doc._id };
+    });
+    res.status(200).json({ success: true, data: { professionals: withId } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getProfessionalById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    if (!id || typeof id !== "string" || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid professional ID format" });
+    }
+    const professional = await Professional.findById(id).populate("centerId").lean();
+    if (!professional) return res.status(404).json({ success: false, message: "Professional not found" });
+    const doc = professional as { _id?: { toString?: () => string }; centerId?: { name?: string; address?: string; city?: string; phone?: string; email?: string } };
+    const center = doc.centerId as { name?: string; address?: string; city?: string; phone?: string; email?: string } | undefined;
+    const withId = {
+      ...professional,
+      id: doc._id?.toString?.() ?? doc._id,
+      centerName: center?.name,
+      centerAddress: center?.address ? `${center.address}${center.city ? `, ${center.city}` : ""}` : undefined,
+      centerPhone: center?.phone,
+      centerEmail: center?.email,
+    };
+    res.status(200).json({ success: true, data: { professional: withId } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * GET /api/directory/professionals/specialties/list
+ * Get list of professional specialties
+ */
+export const getProfessionalSpecialties = async (_req: Request, res: Response) => {
+  try {
+    const specialties = await Professional.distinct("specialtyLabel");
+    res.status(200).json({
+      success: true,
+      data: specialties.sort(),
+    });
+  } catch (error) {
+    console.error("Error fetching professional specialties:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch professional specialties",
+    });
+  }
+};

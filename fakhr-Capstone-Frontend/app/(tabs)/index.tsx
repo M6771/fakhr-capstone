@@ -18,232 +18,7 @@ import { getCenters } from "../../api/directory.api";
 import { HealthCenter } from "../../types/directory.types";
 import { getCurrentUser } from "../../api/users.api";
 import { useAuth } from "../../context/AuthContext";
-
-// Organized resource data by category
-const RESOURCES = {
-  add: {
-    videos: [
-      {
-        id: "v1",
-        title: "Understanding ADD in Children",
-        description:
-          "Learn about Attention Deficit Disorder symptoms and support",
-        duration: "8 min",
-        url: "https://www.youtube.com/watch?v=ouZrZa5pLXk",
-        source: "YouTube",
-      },
-      {
-        id: "v2",
-        title: "ADD Strategies for Parents",
-        description: "Practical tips for supporting your child with ADD",
-        duration: "12 min",
-        url: "https://www.youtube.com/watch?v=Li_tcua0AJI",
-        source: "YouTube",
-      },
-    ],
-    articles: [
-      {
-        id: "a1",
-        title: "ADD vs ADHD: What's the Difference?",
-        description:
-          "Understanding the distinction between ADD and ADHD diagnoses",
-        readTime: "5 min read",
-        url: "https://www.healthline.com/health/adhd/difference-between-add-and-adhd",
-        source: "Healthline",
-      },
-      {
-        id: "a2",
-        title: "Parenting a Child with ADD",
-        description: "Expert advice on supporting your child's development",
-        readTime: "7 min read",
-        url: "https://www.verywellmind.com/add-and-parenting-20538",
-        source: "Verywell Mind",
-      },
-    ],
-    guides: [
-      {
-        id: "g1",
-        title: "ADD Treatment Options Guide",
-        description: "Comprehensive overview of treatment approaches",
-        pages: "12 pages",
-        url: "https://chadd.org/about-adhd/treatment/",
-        source: "CHADD",
-      },
-    ],
-    podcasts: [] as {
-      id: string;
-      title: string;
-      description: string;
-      duration: string;
-      url: string;
-      source: string;
-    }[],
-  },
-  adhd: {
-    videos: [
-      {
-        id: "v1",
-        title: "What is ADHD?",
-        description: "A comprehensive guide to understanding ADHD",
-        duration: "10 min",
-        url: "https://www.youtube.com/watch?v=xMWtGozn5jU",
-        source: "YouTube",
-      },
-      {
-        id: "v2",
-        title: "ADHD Management Techniques",
-        description: "Evidence-based strategies for managing ADHD",
-        duration: "15 min",
-        url: "https://www.youtube.com/watch?v=cx13a2-unjE",
-        source: "YouTube",
-      },
-      {
-        id: "v3",
-        title: "ADHD in the Classroom",
-        description: "Supporting children with ADHD at school",
-        duration: "11 min",
-        url: "https://www.youtube.com/watch?v=QW5jOmD2J94",
-        source: "YouTube",
-      },
-    ],
-    articles: [
-      {
-        id: "a1",
-        title: "ADHD Symptoms Checklist",
-        description: "Common signs and symptoms to look for in children",
-        readTime: "6 min read",
-        url: "https://www.cdc.gov/adhd/symptoms/index.html",
-        source: "CDC",
-      },
-      {
-        id: "a2",
-        title: "ADHD and Diet: What You Need to Know",
-        description: "How nutrition affects ADHD symptoms",
-        readTime: "8 min read",
-        url: "https://www.webmd.com/add-adhd/childhood-adhd/adhd-diets",
-        source: "WebMD",
-      },
-    ],
-    guides: [] as {
-      id: string;
-      title: string;
-      description: string;
-      pages: string;
-      url: string;
-      source: string;
-    }[],
-    podcasts: [
-      {
-        id: "p1",
-        title: "ADHD Experts Podcast",
-        description: "Weekly insights from leading ADHD specialists",
-        duration: "45 min",
-        url: "https://www.additudemag.com/adhd-podcast/",
-        source: "ADDitude",
-      },
-    ],
-  },
-  autism: {
-    videos: [
-      {
-        id: "v1",
-        title: "Understanding Autism Spectrum",
-        description: "Learn about autism signs, diagnosis, and support",
-        duration: "14 min",
-        url: "https://www.youtube.com/watch?v=Lk4qs8jGN4U",
-        source: "YouTube",
-      },
-      {
-        id: "v2",
-        title: "Autism: Early Intervention",
-        description: "The importance of early support for autistic children",
-        duration: "9 min",
-        url: "https://www.youtube.com/watch?v=dAKvM7wXtyg",
-        source: "YouTube",
-      },
-      {
-        id: "v3",
-        title: "Communication Strategies for Autism",
-        description: "Helping your child communicate effectively",
-        duration: "12 min",
-        url: "https://www.youtube.com/watch?v=wKlMcLTqRLs",
-        source: "YouTube",
-      },
-    ],
-    articles: [
-      {
-        id: "a1",
-        title: "Early Signs of Autism",
-        description: "Recognizing autism spectrum disorder in young children",
-        readTime: "6 min read",
-        url: "https://www.autismspeaks.org/signs-autism",
-        source: "Autism Speaks",
-      },
-      {
-        id: "a2",
-        title: "Sensory Processing in Autism",
-        description: "Understanding sensory sensitivities and how to help",
-        readTime: "9 min read",
-        url: "https://www.autism.org/sensory-processing/",
-        source: "Autism Research Institute",
-      },
-    ],
-    guides: [
-      {
-        id: "g1",
-        title: "ABA Therapy Parent Guide",
-        description: "Everything parents need to know about ABA therapy",
-        pages: "15 pages",
-        url: "https://www.autismspeaks.org/applied-behavior-analysis",
-        source: "Autism Speaks",
-      },
-      {
-        id: "g2",
-        title: "IEP Guide for Autism",
-        description: "Navigating special education for your child",
-        pages: "20 pages",
-        url: "https://www.understood.org/iep-guide",
-        source: "Understood",
-      },
-    ],
-    podcasts: [] as {
-      id: string;
-      title: string;
-      description: string;
-      duration: string;
-      url: string;
-      source: string;
-    }[],
-  },
-};
-
-// Category configuration
-const RESOURCE_CATEGORIES = {
-  videos: {
-    title: "Videos",
-    icon: "play-circle",
-    color: "#FF0000",
-    bgColor: "#FFE4E4",
-  },
-  articles: {
-    title: "Articles",
-    icon: "document-text",
-    color: "#5F8F8B",
-    bgColor: "#E8F0EF",
-  },
-  guides: {
-    title: "Guides & Resources",
-    icon: "book",
-    color: "#7B68EE",
-    bgColor: "#EDE8FF",
-  },
-  podcasts: {
-    title: "Podcasts",
-    icon: "headset",
-    color: "#E8A838",
-    bgColor: "#FFF4E0",
-  },
-};
+import { RESOURCES, RESOURCE_CATEGORIES } from "../../constants/resources";
 
 // Design system colors
 const colors = {
@@ -371,7 +146,7 @@ export default function HomeScreen() {
         {/* Welcome Card */}
         <View style={styles.welcomeCard}>
           <View style={styles.welcomeContent}>
-            <Text style={styles.welcomeTitle}>Welcome to Sanad</Text>
+            <Text style={styles.welcomeTitle}>Welcome to Fakhr</Text>
             <Text style={styles.welcomeSubtitle}>
               Your trusted companion for special needs resources
             </Text>
@@ -557,333 +332,59 @@ export default function HomeScreen() {
               </Pressable>
             </View>
 
-            {/* Videos Section */}
-            {RESOURCES[selectedResource as keyof typeof RESOURCES]?.videos
-              ?.length > 0 && (
-                <View style={styles.categorySection}>
-                  <View style={styles.categoryHeader}>
+            {/* Content type icons - navigate to respective pages */}
+            <View style={styles.resourceTypeIconsRow}>
+              {(["videos", "articles", "podcasts"] as const).map((contentType) => {
+                const items = RESOURCES[selectedResource as keyof typeof RESOURCES]?.[contentType];
+                const hasItems = items && items.length > 0;
+                const category = RESOURCE_CATEGORIES[contentType];
+                return (
+                  <Pressable
+                    key={contentType}
+                    style={({ pressed }) => [
+                      styles.resourceTypeIconBtn,
+                      pressed && { opacity: 0.8 },
+                      !hasItems && styles.resourceTypeIconDisabled,
+                    ]}
+                    onPress={() =>
+                      hasItems &&
+                      router.push({
+                        pathname: "/(tabs)/resources/resource-content",
+                        params: { resource: selectedResource, type: contentType },
+                      })
+                    }
+                    disabled={!hasItems}
+                  >
                     <View
                       style={[
-                        styles.categoryIconWrap,
-                        { backgroundColor: RESOURCE_CATEGORIES.videos.bgColor },
+                        styles.resourceTypeIconWrap,
+                        { backgroundColor: category.bgColor },
                       ]}
                     >
                       <Ionicons
-                        name="play-circle"
-                        size={20}
-                        color={RESOURCE_CATEGORIES.videos.color}
-                      />
-                    </View>
-                    <Text style={styles.categoryTitle}>Videos</Text>
-                    <View style={styles.categoryBadge}>
-                      <Text style={styles.categoryBadgeText}>
-                        {
-                          RESOURCES[selectedResource as keyof typeof RESOURCES]
-                            ?.videos?.length
+                        name={
+                          contentType === "videos"
+                            ? "play-circle"
+                            : contentType === "articles"
+                              ? "document-text"
+                              : "headset"
                         }
-                      </Text>
-                    </View>
-                  </View>
-                  {RESOURCES[
-                    selectedResource as keyof typeof RESOURCES
-                  ]?.videos?.map((video) => (
-                    <Pressable
-                      key={video.id}
-                      style={({ pressed }) => [
-                        styles.resourceItem,
-                        pressed && { transform: [{ scale: 0.98 }] },
-                      ]}
-                      onPress={() => Linking.openURL(video.url)}
-                    >
-                      <View
-                        style={[
-                          styles.resourceItemIcon,
-                          { backgroundColor: RESOURCE_CATEGORIES.videos.bgColor },
-                        ]}
-                      >
-                        <Ionicons name="logo-youtube" size={22} color="#FF0000" />
-                      </View>
-                      <View style={styles.resourceItemContent}>
-                        <Text style={styles.resourceItemTitle} numberOfLines={2}>
-                          {video.title}
-                        </Text>
-                        <Text style={styles.resourceItemDesc} numberOfLines={1}>
-                          {video.description}
-                        </Text>
-                        <View style={styles.resourceItemMeta}>
-                          <Ionicons
-                            name="time-outline"
-                            size={12}
-                            color={colors.textTertiary}
-                          />
-                          <Text style={styles.resourceItemMetaText}>
-                            {video.duration}
-                          </Text>
-                          <View style={styles.resourceItemDot} />
-                          <Text style={styles.resourceItemSource}>
-                            {video.source}
-                          </Text>
-                        </View>
-                      </View>
-                      <Ionicons
-                        name="open-outline"
-                        size={18}
-                        color={colors.textTertiary}
+                        size={28}
+                        color={hasItems ? category.color : colors.textTertiary}
                       />
-                    </Pressable>
-                  ))}
-                </View>
-              )}
-
-            {/* Articles Section */}
-            {RESOURCES[selectedResource as keyof typeof RESOURCES]?.articles
-              ?.length > 0 && (
-                <View style={styles.categorySection}>
-                  <View style={styles.categoryHeader}>
-                    <View
+                    </View>
+                    <Text
                       style={[
-                        styles.categoryIconWrap,
-                        { backgroundColor: RESOURCE_CATEGORIES.articles.bgColor },
+                        styles.resourceTypeIconLabel,
+                        !hasItems && styles.resourceTypeIconLabelDisabled,
                       ]}
                     >
-                      <Ionicons
-                        name="document-text"
-                        size={20}
-                        color={RESOURCE_CATEGORIES.articles.color}
-                      />
-                    </View>
-                    <Text style={styles.categoryTitle}>Articles</Text>
-                    <View style={styles.categoryBadge}>
-                      <Text style={styles.categoryBadgeText}>
-                        {
-                          RESOURCES[selectedResource as keyof typeof RESOURCES]
-                            ?.articles?.length
-                        }
-                      </Text>
-                    </View>
-                  </View>
-                  {RESOURCES[
-                    selectedResource as keyof typeof RESOURCES
-                  ]?.articles?.map((article) => (
-                    <Pressable
-                      key={article.id}
-                      style={({ pressed }) => [
-                        styles.resourceItem,
-                        pressed && { transform: [{ scale: 0.98 }] },
-                      ]}
-                      onPress={() => Linking.openURL(article.url)}
-                    >
-                      <View
-                        style={[
-                          styles.resourceItemIcon,
-                          {
-                            backgroundColor: RESOURCE_CATEGORIES.articles.bgColor,
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          name="document-text"
-                          size={22}
-                          color={RESOURCE_CATEGORIES.articles.color}
-                        />
-                      </View>
-                      <View style={styles.resourceItemContent}>
-                        <Text style={styles.resourceItemTitle} numberOfLines={2}>
-                          {article.title}
-                        </Text>
-                        <Text style={styles.resourceItemDesc} numberOfLines={1}>
-                          {article.description}
-                        </Text>
-                        <View style={styles.resourceItemMeta}>
-                          <Ionicons
-                            name="book-outline"
-                            size={12}
-                            color={colors.textTertiary}
-                          />
-                          <Text style={styles.resourceItemMetaText}>
-                            {article.readTime}
-                          </Text>
-                          <View style={styles.resourceItemDot} />
-                          <Text style={styles.resourceItemSource}>
-                            {article.source}
-                          </Text>
-                        </View>
-                      </View>
-                      <Ionicons
-                        name="open-outline"
-                        size={18}
-                        color={colors.textTertiary}
-                      />
-                    </Pressable>
-                  ))}
-                </View>
-              )}
-
-            {/* Guides Section */}
-            {RESOURCES[selectedResource as keyof typeof RESOURCES]?.guides
-              ?.length > 0 && (
-                <View style={styles.categorySection}>
-                  <View style={styles.categoryHeader}>
-                    <View
-                      style={[
-                        styles.categoryIconWrap,
-                        { backgroundColor: RESOURCE_CATEGORIES.guides.bgColor },
-                      ]}
-                    >
-                      <Ionicons
-                        name="book"
-                        size={20}
-                        color={RESOURCE_CATEGORIES.guides.color}
-                      />
-                    </View>
-                    <Text style={styles.categoryTitle}>Guides & Resources</Text>
-                    <View style={styles.categoryBadge}>
-                      <Text style={styles.categoryBadgeText}>
-                        {
-                          RESOURCES[selectedResource as keyof typeof RESOURCES]
-                            ?.guides?.length
-                        }
-                      </Text>
-                    </View>
-                  </View>
-                  {RESOURCES[
-                    selectedResource as keyof typeof RESOURCES
-                  ]?.guides?.map((guide) => (
-                    <Pressable
-                      key={guide.id}
-                      style={({ pressed }) => [
-                        styles.resourceItem,
-                        pressed && { transform: [{ scale: 0.98 }] },
-                      ]}
-                      onPress={() => Linking.openURL(guide.url)}
-                    >
-                      <View
-                        style={[
-                          styles.resourceItemIcon,
-                          { backgroundColor: RESOURCE_CATEGORIES.guides.bgColor },
-                        ]}
-                      >
-                        <Ionicons
-                          name="book"
-                          size={22}
-                          color={RESOURCE_CATEGORIES.guides.color}
-                        />
-                      </View>
-                      <View style={styles.resourceItemContent}>
-                        <Text style={styles.resourceItemTitle} numberOfLines={2}>
-                          {guide.title}
-                        </Text>
-                        <Text style={styles.resourceItemDesc} numberOfLines={1}>
-                          {guide.description}
-                        </Text>
-                        <View style={styles.resourceItemMeta}>
-                          <Ionicons
-                            name="document-outline"
-                            size={12}
-                            color={colors.textTertiary}
-                          />
-                          <Text style={styles.resourceItemMetaText}>
-                            {guide.pages}
-                          </Text>
-                          <View style={styles.resourceItemDot} />
-                          <Text style={styles.resourceItemSource}>
-                            {guide.source}
-                          </Text>
-                        </View>
-                      </View>
-                      <Ionicons
-                        name="open-outline"
-                        size={18}
-                        color={colors.textTertiary}
-                      />
-                    </Pressable>
-                  ))}
-                </View>
-              )}
-
-            {/* Podcasts Section */}
-            {RESOURCES[selectedResource as keyof typeof RESOURCES]?.podcasts
-              ?.length > 0 && (
-                <View style={styles.categorySection}>
-                  <View style={styles.categoryHeader}>
-                    <View
-                      style={[
-                        styles.categoryIconWrap,
-                        { backgroundColor: RESOURCE_CATEGORIES.podcasts.bgColor },
-                      ]}
-                    >
-                      <Ionicons
-                        name="headset"
-                        size={20}
-                        color={RESOURCE_CATEGORIES.podcasts.color}
-                      />
-                    </View>
-                    <Text style={styles.categoryTitle}>Podcasts</Text>
-                    <View style={styles.categoryBadge}>
-                      <Text style={styles.categoryBadgeText}>
-                        {
-                          RESOURCES[selectedResource as keyof typeof RESOURCES]
-                            ?.podcasts?.length
-                        }
-                      </Text>
-                    </View>
-                  </View>
-                  {RESOURCES[
-                    selectedResource as keyof typeof RESOURCES
-                  ]?.podcasts?.map((podcast) => (
-                    <Pressable
-                      key={podcast.id}
-                      style={({ pressed }) => [
-                        styles.resourceItem,
-                        pressed && { transform: [{ scale: 0.98 }] },
-                      ]}
-                      onPress={() => Linking.openURL(podcast.url)}
-                    >
-                      <View
-                        style={[
-                          styles.resourceItemIcon,
-                          {
-                            backgroundColor: RESOURCE_CATEGORIES.podcasts.bgColor,
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          name="headset"
-                          size={22}
-                          color={RESOURCE_CATEGORIES.podcasts.color}
-                        />
-                      </View>
-                      <View style={styles.resourceItemContent}>
-                        <Text style={styles.resourceItemTitle} numberOfLines={2}>
-                          {podcast.title}
-                        </Text>
-                        <Text style={styles.resourceItemDesc} numberOfLines={1}>
-                          {podcast.description}
-                        </Text>
-                        <View style={styles.resourceItemMeta}>
-                          <Ionicons
-                            name="time-outline"
-                            size={12}
-                            color={colors.textTertiary}
-                          />
-                          <Text style={styles.resourceItemMetaText}>
-                            {podcast.duration}
-                          </Text>
-                          <View style={styles.resourceItemDot} />
-                          <Text style={styles.resourceItemSource}>
-                            {podcast.source}
-                          </Text>
-                        </View>
-                      </View>
-                      <Ionicons
-                        name="open-outline"
-                        size={18}
-                        color={colors.textTertiary}
-                      />
-                    </Pressable>
-                  ))}
-                </View>
-              )}
+                      {category.title}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         ) : (
           <View style={styles.emptyStateCard}>
@@ -969,13 +470,13 @@ export default function HomeScreen() {
             <View style={styles.centersList}>
               {centers.map((center: HealthCenter) => (
                 <Pressable
-                  key={center.id}
+                  key={center.id || (center as { _id?: string })._id}
                   style={({ pressed }) => [
                     styles.centerItem,
                     pressed && { transform: [{ scale: 0.98 }] },
                   ]}
                   onPress={() =>
-                    router.push(`/(tabs)/directory/center-details?id=${center.id}`)
+                    router.push(`/(tabs)/directory/center-details?id=${center.id || (center as { _id?: string })._id}`)
                   }
                 >
                   <View style={styles.centerItemContent}>
@@ -1567,6 +1068,38 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 4,
+  },
+  resourceTypeIconsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 8,
+    gap: 12,
+  },
+  resourceTypeIconBtn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resourceTypeIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  resourceTypeIconLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textSecondary,
+  },
+  resourceTypeIconDisabled: {
+    opacity: 0.5,
+  },
+  resourceTypeIconLabelDisabled: {
+    color: colors.textTertiary,
   },
   // Category Section
   categorySection: {

@@ -14,12 +14,14 @@ const SEED_CARE_PATH = process.env.SEED_CARE_PATH === "true";
 // ✅ Seed data imports (MUST be at top)
 import { centersSeed } from "./data/centers";
 import { professionalsSeed } from "./data/professionals";
+import { servicesSeed } from "./data/services";
 
 // ✅ Your real Mongoose models (adjust paths if your filenames differ)
 import User from "../models/User.model";
 import Child from "../models/Child.model";
 import Center from "../models/Center.model";
 import Professional from "../models/Professional.model";
+import Service from "../models/Service.model";
 import CarePathTemplate from "../models/CarePathTemplate.model";
 import CarePath from "../models/CarePath.model";
 import Task from "../models/Task.model";
@@ -33,6 +35,7 @@ const models = {
   Child,
   Center,
   Professional,
+  Service,
   CarePathTemplate,
   CarePath,
   Task,
@@ -207,6 +210,7 @@ const seedDatabase = async () => {
       models.Child.deleteMany({}),
       models.Center.deleteMany({}),
       models.Professional.deleteMany({}),
+      models.Service.deleteMany({}),
       models.Post.deleteMany({}),
       models.PostReport.deleteMany({}),
 
@@ -305,6 +309,13 @@ const seedDatabase = async () => {
     }
 
     // -------------------------
+    // Services (from seed file)
+    // -------------------------
+    console.log("📋 Seeding services...");
+    const createdServices = await models.Service.insertMany(servicesSeed as any);
+    console.log(`✅ Services: ${createdServices.length}`);
+
+    // -------------------------
     // Centers (from seed file)
     // -------------------------
     console.log("🏢 Seeding centers...");
@@ -343,6 +354,9 @@ const seedDatabase = async () => {
 
     const createdProfessionals = await models.Professional.insertMany(professionalsToInsert as any);
     console.log(`✅ Professionals: ${createdProfessionals.length}`);
+
+    const missing = await Professional.countDocuments({ centerId: { $exists: false } });
+    console.log("Missing centerId:", missing);
 
     // -------------------------
     // Posts

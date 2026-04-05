@@ -1,12 +1,9 @@
 import { Router } from "express";
 import { getServices, getServiceById } from "./services.controller";
-import { authenticate } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
-// All services routes require authentication
-router.use(authenticate);
-
+// Services are public - no auth required to browse
 // GET /api/services - Get all services
 router.get("/", getServices);
 
