@@ -1,4 +1,6 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# =========================
+# Fakhr Capstone Frontend
+# =========================
 
 # dependencies
 node_modules/
@@ -7,28 +9,19 @@ node_modules/
 .expo/
 dist/
 web-build/
-expo-env.d.ts
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
+# Metro / React Native
 .metro-health-check*
-
-# debug
 npm-debug.*
 yarn-debug.*
 yarn-error.*
 
+# Native build artifacts (if prebuild ever used)
+ios/
+android/
+
 # macOS
 .DS_Store
-*.pem
 
 # local env files
 .env
@@ -40,8 +33,6 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-app-example
-
-# generated native folders
-/ios
-/android
+# optional - editor / tooling
+.vscode/
+.cursor/ 
