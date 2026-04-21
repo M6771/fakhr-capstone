@@ -12,11 +12,11 @@ const generateAIResponse = (userMessage: string): string => {
 
   // Simple keyword-based responses (dummy implementation)
   if (lowerMessage.includes("hello") || lowerMessage.includes("hi") || lowerMessage.includes("hey")) {
-    return "Hello! I'm here to help you with SANAD. How can I assist you today?";
+    return "Hello! I'm here to help you with Fakhr. How can I assist you today?";
   }
 
   if (lowerMessage.includes("service") || lowerMessage.includes("services")) {
-    return "SANAD offers various services including speech therapy, behavioral therapy, occupational therapy, and more. You can explore all available services in the Services section of the app.";
+    return "Fakhr offers various services including speech therapy, behavioral therapy, occupational therapy, and more. You can explore all available services in the Services section of the app.";
   }
 
   if (lowerMessage.includes("professional") || lowerMessage.includes("therapist") || lowerMessage.includes("specialist")) {
@@ -52,7 +52,7 @@ const generateAIResponse = (userMessage: string): string => {
   }
 
   // Default response
-  return "Thank you for your message. I'm here to help you navigate SANAD. You can ask me about services, professionals, health centers, care paths, or any other features. How can I assist you?";
+  return "Thank you for your message. I'm here to help you navigate Fakhr. You can ask me about services, professionals, health centers, care paths, or any other features. How can I assist you?";
 };
 
 /**

@@ -22,9 +22,9 @@ export const sendPasswordResetEmail = async (
   const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
   const mailOptions = {
-    from: `"SANAD" <${env.EMAIL_FROM}>`,
+    from: `"Fakhr" <${env.EMAIL_FROM}>`,
     to: email,
-    subject: "Password Reset Request - SANAD",
+    subject: "Password Reset Request - Fakhr",
     html: `
       <!DOCTYPE html>
       <html>
@@ -36,7 +36,7 @@ export const sendPasswordResetEmail = async (
           <div style="background-color: #f4f4f4; padding: 20px; border-radius: 5px;">
             <h2 style="color: #007AFF;">Password Reset Request</h2>
             <p>Hello,</p>
-            <p>You requested to reset your password for your SANAD account.</p>
+            <p>You requested to reset your password for your Fakhr account.</p>
             <p>Click the button below to reset your password:</p>
             <div style="text-align: center; margin: 30px 0;">
               <a href="${resetUrl}" style="background-color: #007AFF; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
@@ -52,9 +52,9 @@ export const sendPasswordResetEmail = async (
       </html>
     `,
     text: `
-      Password Reset Request - SANAD
+      Password Reset Request - Fakhr
       
-      You requested to reset your password for your SANAD account.
+      You requested to reset your password for your Fakhr account.
       
       Click the following link to reset your password:
       ${resetUrl}

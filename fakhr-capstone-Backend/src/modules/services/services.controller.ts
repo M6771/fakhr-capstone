@@ -1,24 +1,19 @@
-import { Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import Service from "../../models/Service.model";
 import { ApiError } from "../../middlewares/apiError";
 import { HTTP_STATUS } from "../../config/constants";
-import { AuthRequest } from "../../middlewares/auth.middleware";
 
 /**
  * Get all services
  * GET /api/services
  */
 export const getServices = async (
-  req: AuthRequest,
+  _req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    if (!req.user) {
-      throw ApiError.unauthorized("User not authenticated");
-    }
-
     const services = await Service.find().sort({ name: 1 });
 
     res.status(HTTP_STATUS.OK).json({
@@ -55,15 +50,11 @@ export const getServices = async (
  * GET /api/services/:serviceId
  */
 export const getServiceById = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    if (!req.user) {
-      throw ApiError.unauthorized("User not authenticated");
-    }
-
     const serviceId = Array.isArray(req.params.serviceId)
       ? req.params.serviceId[0]
       : req.params.serviceId;
