@@ -112,8 +112,6 @@ export default function TabsLayout() {
       />
 
       {/* Hidden routes - accessible via navigation but not visible in tab bar */}
-      <Tabs.Screen name="care-path" options={{ href: null }} />
-      <Tabs.Screen name="community" options={{ href: null }} />
       <Tabs.Screen name="directory" options={{ href: null }} />
       <Tabs.Screen name="documents" options={{ href: null }} />
       <Tabs.Screen name="plan" options={{ href: null }} />
