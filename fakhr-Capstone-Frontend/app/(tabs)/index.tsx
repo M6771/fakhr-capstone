@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -14,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
-import { getCenters } from "../../api/directory.api";
+import { centersListQueryKey, getCenters } from "../../api/directory.api";
 import { HealthCenter } from "../../types/directory.types";
 import { getCurrentUser } from "../../api/users.api";
 import { useAuth } from "../../context/AuthContext";
@@ -62,23 +61,30 @@ export default function HomeScreen() {
     retry: false,
   });
 
-  // Fetch centers for the home screen (limit to 3)
-  const { data: centersData, isLoading: centersLoading } = useQuery({
-    queryKey: ["centers", "home"],
+  // Same query key as directory > centers (no filters) so Health Centers on home reuses that cache
+  const {
+    data: centersData,
+    isLoading: centersLoading,
+    isError: centersError,
+    error: centersQueryError,
+    refetch: refetchCenters,
+  } = useQuery({
+    queryKey: centersListQueryKey(),
     queryFn: () => getCenters(),
+    retry: 2,
+    retryDelay: (i) => Math.min(1000 * 2 ** i, 8000),
   });
 
-  // Extract centers array from response (handle both array and object responses)
+  const centersErrorMessage =
+    centersQueryError instanceof Error
+      ? centersQueryError.message
+      : typeof centersQueryError === "string"
+        ? centersQueryError
+        : "Unknown error";
+
   const centers: HealthCenter[] = React.useMemo(() => {
-    if (!centersData) return [];
-    if (Array.isArray(centersData)) {
-      return centersData.slice(0, 3);
-    }
-    const centersResponse = centersData as { centers?: HealthCenter[] };
-    if (centersResponse?.centers && Array.isArray(centersResponse.centers)) {
-      return centersResponse.centers.slice(0, 3);
-    }
-    return [];
+    if (!centersData || !Array.isArray(centersData)) return [];
+    return centersData.slice(0, 3);
   }, [centersData]);
 
   // Get user information - use API data if available, fallback to context user, then defaults
@@ -465,6 +471,25 @@ export default function HomeScreen() {
             <View style={styles.centersLoading}>
               <ActivityIndicator size="small" color={colors.primary} />
               <Text style={styles.centersLoadingText}>Loading centers...</Text>
+            </View>
+          ) : centersError ? (
+            <View style={styles.centersEmpty}>
+              <Ionicons name="cloud-offline-outline" size={32} color={colors.textTertiary} />
+              <Text style={styles.centersEmptyText}>Could not load centers</Text>
+              <Text style={styles.centersErrorDetail} numberOfLines={6}>
+                {centersErrorMessage.trim()}
+              </Text>
+              <Text style={styles.centersErrorHint} numberOfLines={4}>
+                {
+                  "Update EXPO_PUBLIC_API_URL in .env to this machine's LAN IP (same Wi-Fi as your phone), with /api at the end, restart Expo, and keep the backend running."
+                }
+              </Text>
+              <Pressable
+                onPress={() => refetchCenters()}
+                style={({ pressed }) => [styles.centersRetryBtn, pressed && { opacity: 0.8 }]}
+              >
+                <Text style={styles.centersRetryText}>Tap to retry</Text>
+              </Pressable>
             </View>
           ) : centers.length > 0 ? (
             <View style={styles.centersList}>
@@ -1561,5 +1586,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textTertiary,
     marginTop: 8,
+  },
+  centersErrorDetail: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 10,
+    textAlign: "center",
+    lineHeight: 18,
+    paddingHorizontal: 8,
+  },
+  centersErrorHint: {
+    fontSize: 11,
+    color: colors.textTertiary,
+    marginTop: 10,
+    textAlign: "center",
+    lineHeight: 16,
+    paddingHorizontal: 12,
+  },
+  centersRetryBtn: {
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: `${colors.primary}18`,
+  },
+  centersRetryText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.primary,
   },
 });

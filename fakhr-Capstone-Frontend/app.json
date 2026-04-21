@@ -10,7 +10,14 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourteam.fakhr"
+      "bundleIdentifier": "com.yourteam.fakhr",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "comgooglemaps",
+          "googlechromes",
+          "maps"
+        ]
+      }
     },
     "android": {
       "package": "com.yourteam.fakhr",

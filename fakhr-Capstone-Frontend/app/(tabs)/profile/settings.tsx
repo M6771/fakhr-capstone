@@ -1,22 +1,43 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   cardShadow,
   colors,
   radius,
-  sectionSpacing,
   spacing,
   typography,
 } from "../../../theme";
 
 export default function SettingsScreen() {
+  const router = useRouter();
+
   return (
     <SafeAreaView style={styles.wrapper} edges={["top"]}>
+      <View style={styles.header}>
+        <Pressable
+          style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back to profile"
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        </Pressable>
+        <Text style={styles.headerTitle}>Settings</Text>
+        <View style={styles.headerSide} />
+      </View>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
       >
-        <Text style={styles.title}>Settings</Text>
         <TouchableOpacity style={styles.settingItem} activeOpacity={0.85}>
           <Text style={styles.settingLabel}>Notifications</Text>
           <Text style={styles.settingValue}>On</Text>
@@ -39,20 +60,38 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.backgroundCard,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: typography.h3,
+    fontWeight: typography.weightBold,
+    color: colors.text,
+  },
+  headerSide: {
+    width: 40,
+    height: 40,
+  },
   container: {
     flex: 1,
   },
   content: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.md,
     paddingBottom: 100,
-  },
-  title: {
-    fontSize: typography.title,
-    lineHeight: typography.h1LineHeight,
-    fontWeight: typography.weightBold,
-    color: colors.text,
-    marginBottom: sectionSpacing.default,
   },
   settingItem: {
     flexDirection: "row",

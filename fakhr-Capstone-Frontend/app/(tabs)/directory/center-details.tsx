@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { getCenterDetails } from "../../../api/directory.api";
 import { colors, sectionSpacing, spacing, typography } from "../../../theme";
+import { openInGoogleMaps } from "../../../utils/openMaps";
 
 export default function CenterDetailsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -30,11 +31,17 @@ export default function CenterDetailsScreen() {
   };
 
   const handleOpenGoogleMaps = () => {
-    if (!center?.address) return;
-    const fullAddress = center.city ? `${center.address}, ${center.city}` : center.address;
-    const encodedAddress = encodeURIComponent(fullAddress);
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-    Linking.openURL(googleMapsUrl);
+    if (!center) return;
+    const line = [center.address, center.city]
+      .filter((p): p is string => typeof p === "string" && p.trim().length > 0)
+      .join(", ");
+    void openInGoogleMaps({
+      mapUrl: center.mapUrl,
+      latitude: center.latitude,
+      longitude: center.longitude,
+      addressLine: line || null,
+      placeName: center.name,
+    });
   };
 
   const handleOpenGoogleSearch = () => {
@@ -43,25 +50,6 @@ export default function CenterDetailsScreen() {
     const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
     Linking.openURL(searchUrl);
   };
-  const renderStars = (rating: number) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-    
-    return (
-      <View style={styles.starsContainer}>
-        {[...Array(fullStars)].map((_, i) => (
-          <Text key={`full-${i}`} style={styles.starFilled}>★</Text>
-        ))}
-        {hasHalfStar && <Text style={styles.starHalf}>★</Text>}
-        {[...Array(emptyStars)].map((_, i) => (
-          <Text key={`empty-${i}`} style={styles.starEmpty}>☆</Text>
-        ))}
-        <Text style={styles.ratingNumber}>{rating.toFixed(1)}</Text>
-      </View>
-    );
-  };
-
   if (isLoading) {
     return (
       <SafeAreaView style={styles.wrapper} edges={["top"]}>
@@ -99,6 +87,26 @@ export default function CenterDetailsScreen() {
     );
   }
 
+  const locationLine = [center.address, center.city]
+    .filter((p): p is string => typeof p === "string" && p.trim().length > 0)
+    .join(", ");
+  const lat = center.latitude;
+  const lng = center.longitude;
+  const hasCoords =
+    lat != null &&
+    lng != null &&
+    typeof lat === "number" &&
+    typeof lng === "number" &&
+    !Number.isNaN(lat) &&
+    !Number.isNaN(lng);
+  const canShowLocation =
+    Boolean(center.mapUrl?.trim()) ||
+    hasCoords ||
+    locationLine.length > 0;
+  const locationPrimaryText =
+    locationLine ||
+    (hasCoords ? "View on map" : center.mapUrl?.trim() ? center.name : "");
+
   return (
     <SafeAreaView style={styles.wrapper} edges={["top"]}>
       <ScrollView
@@ -117,11 +125,13 @@ export default function CenterDetailsScreen() {
           )}
         </View>
 
-        {center.address && (
+        {canShowLocation && (
           <Pressable onPress={handleOpenGoogleMaps} style={styles.locationRow}>
             <Ionicons name="location-outline" size={20} color={colors.primary} />
             <View style={styles.locationContent}>
-              <Text style={styles.address}>{center.address}{center.city ? `, ${center.city}` : ""}</Text>
+              <Text style={styles.address}>
+                {locationPrimaryText || "Tap to open in Google Maps"}
+              </Text>
               <Text style={styles.openInMapsHint}>Tap to open in Google Maps</Text>
             </View>
             <Ionicons name="open-outline" size={18} color={colors.primary} />

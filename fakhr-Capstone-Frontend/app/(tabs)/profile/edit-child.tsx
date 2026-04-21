@@ -223,14 +223,6 @@ export default function EditChildScreen() {
         setShowDatePicker(false);
     };
 
-    const handleNext = () => {
-        if (currentStep < 4) {
-            setCurrentStep(currentStep + 1);
-        } else {
-            handleSubmit();
-        }
-    };
-
     const handleBack = () => {
         if (currentStep > 1) {
             setCurrentStep(currentStep - 1);

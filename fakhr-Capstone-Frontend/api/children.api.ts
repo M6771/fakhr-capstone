@@ -12,11 +12,11 @@ export interface Child {
   age?: number;
   gender?: string;
   dateOfBirth?: string;
-  diagnosis?: string[];
+  diagnosis?: string[] | string;
   diagnoses?: string[]; // Alias for diagnosis
   medicalHistory?: string;
-  medications?: Medication[];
-  allergies?: string[];
+  medications?: Medication[] | string;
+  allergies?: string[] | string;
   parentId: string;
   createdAt?: string;
   updatedAt?: string;

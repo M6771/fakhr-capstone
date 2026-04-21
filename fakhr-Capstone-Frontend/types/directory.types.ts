@@ -11,7 +11,9 @@ export interface HealthCenter {
   operatingHours?: string;
   rating?: number;
   latitude?: number;          
-  longitude?: number; 
+  longitude?: number;
+  /** If set, "Open in Maps" uses this URL (e.g. curated Google Maps search). */
+  mapUrl?: string;
   reviews?: Review[];
 }
 
@@ -51,6 +53,10 @@ export interface Professional {
   centerAddress?: string;
   centerPhone?: string;
   centerEmail?: string;
+  /** From populated center — open in Google Maps when user taps Center Location */
+  centerMapUrl?: string;
+  centerLatitude?: number;
+  centerLongitude?: number;
   createdAt?: string;
   updatedAt?: string;
 }

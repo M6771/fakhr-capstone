@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
+import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import React, { useLayoutEffect } from "react";
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -66,6 +68,26 @@ export default function ResourceContentScreen() {
   const items = resourceData?.[type as ContentType];
   const resolvedCategory = RESOURCE_CATEGORIES[type as ContentType];
 
+  const handleOpenResource = async (url: string) => {
+    try {
+      const result = await WebBrowser.openBrowserAsync(url);
+      if (result.type === "cancel" || result.type === "dismiss") {
+        return;
+      }
+    } catch {
+      try {
+        const canOpen = await Linking.canOpenURL(url);
+        if (!canOpen) {
+          Alert.alert("Unable to open link", "This resource link is not supported on your device.");
+          return;
+        }
+        await Linking.openURL(url);
+      } catch {
+        Alert.alert("Unable to open link", "Please try again later.");
+      }
+    }
+  };
+
   if (!items || items.length === 0) {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
@@ -73,7 +95,7 @@ export default function ResourceContentScreen() {
           <Ionicons name={resolvedCategory.icon as any} size={48} color={resolvedCategory.color} />
           <Text style={styles.emptyTitle}>No {resolvedCategory.title} yet</Text>
           <Text style={styles.emptyText}>
-            We're curating {resolvedCategory.title.toLowerCase()} for this topic. Check back soon.
+            We&apos;re curating {resolvedCategory.title.toLowerCase()} for this topic. Check back soon.
           </Text>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backBtnText}>Go Back</Text>
@@ -86,7 +108,6 @@ export default function ResourceContentScreen() {
   const renderItem = (item: VideoItem | ArticleItem | PodcastItem | GuideItem) => {
     const isVideo = "duration" in item && !("readTime" in item) && !("pages" in item);
     const isArticle = "readTime" in item;
-    const isGuide = "pages" in item;
     const isPodcast = "duration" in item && type === "podcasts";
 
     const meta = isVideo || isPodcast
@@ -99,7 +120,7 @@ export default function ResourceContentScreen() {
       <Pressable
         key={item.id}
         style={({ pressed }) => [styles.item, pressed && { opacity: 0.9 }]}
-        onPress={() => Linking.openURL(item.url)}
+        onPress={() => void handleOpenResource(item.url)}
       >
         <View style={[styles.itemIcon, { backgroundColor: resolvedCategory.bgColor }]}>
           {type === "videos" ? (

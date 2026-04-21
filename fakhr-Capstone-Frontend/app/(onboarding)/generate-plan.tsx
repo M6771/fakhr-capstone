@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -14,7 +13,6 @@ import { colors, radius, spacing, typography } from "../../theme";
 
 export default function GeneratePlanScreen() {
   const router = useRouter();
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const generateMutation = useMutation({
     mutationFn: generateCarePath,
@@ -37,7 +35,7 @@ export default function GeneratePlanScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Generating Your Care Path</Text>
       <Text style={styles.subtitle}>
-        We're creating a personalized care plan based on your child's
+        We&apos;re creating a personalized care plan based on your child&apos;s
         information.
       </Text>
       {generateMutation.isPending ? (

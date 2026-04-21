@@ -4,7 +4,7 @@ import React from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
-import { getChildren, Child } from "../../../api/children.api";
+import { getChildren } from "../../../api/children.api";
 
 // Design system colors
 const colors = {
@@ -76,7 +76,7 @@ export default function ManageChildrenScreen() {
       }
 
       // Handle medications - backend returns string, frontend expects array of objects
-      let medications: Array<{ name: string; dosage?: string; frequency?: string }> = [];
+      let medications: { name: string; dosage?: string; frequency?: string }[] = [];
       if (child.medications) {
         if (typeof child.medications === "string") {
           try {

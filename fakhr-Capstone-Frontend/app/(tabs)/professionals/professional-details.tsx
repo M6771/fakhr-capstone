@@ -14,6 +14,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 import { getProfessionalDetails } from "../../../api/directory.api";
+import type { Professional } from "../../../types/directory.types";
+import { openInGoogleMaps, toFiniteNumber } from "../../../utils/openMaps";
 
 // Design system colors
 const colors = {
@@ -27,6 +29,27 @@ const colors = {
   textMuted: "#8A8A8A",
   border: "rgba(0, 0, 0, 0.06)",
 };
+
+function openCenterInGoogleMaps(p: Professional) {
+  void openInGoogleMaps({
+    mapUrl: p.centerMapUrl,
+    latitude: p.centerLatitude,
+    longitude: p.centerLongitude,
+    addressLine: p.centerAddress || p.location,
+    placeName: p.centerName,
+  });
+}
+
+function canOpenCenterInMaps(p: Professional): boolean {
+  const lat = toFiniteNumber(p.centerLatitude);
+  const lng = toFiniteNumber(p.centerLongitude);
+  return Boolean(
+    p.centerMapUrl?.trim() ||
+      (lat !== null && lng !== null) ||
+      (p.centerAddress || p.location || "").trim() ||
+      p.centerName?.trim()
+  );
+}
 
 export default function ProfessionalDetailsScreen() {
   const router = useRouter();
@@ -199,15 +222,32 @@ export default function ProfessionalDetailsScreen() {
             </View>
           </View>
           <View style={styles.quickInfoDivider} />
-          <View style={styles.quickInfoRow}>
-            <Ionicons name="location-outline" size={20} color={colors.primary} />
-            <View style={styles.quickInfoContent}>
-              <Text style={styles.quickInfoLabel}>Center Location</Text>
-              <Text style={styles.quickInfoValue}>
-                {professional.centerAddress || professional.location || "—"}
-              </Text>
+          {canOpenCenterInMaps(professional) ? (
+            <Pressable
+              style={({ pressed }) => [styles.quickInfoRow, pressed && { opacity: 0.7 }]}
+              onPress={() => openCenterInGoogleMaps(professional)}
+            >
+              <Ionicons name="location-outline" size={20} color={colors.primary} />
+              <View style={styles.quickInfoContent}>
+                <Text style={styles.quickInfoLabel}>Center Location</Text>
+                <Text style={styles.quickInfoValue}>
+                  {professional.centerAddress || professional.location || professional.centerName || "—"}
+                </Text>
+                <Text style={styles.mapsHint}>Tap to open in Maps</Text>
+              </View>
+              <Ionicons name="open-outline" size={18} color={colors.textMuted} />
+            </Pressable>
+          ) : (
+            <View style={styles.quickInfoRow}>
+              <Ionicons name="location-outline" size={20} color={colors.textMuted} />
+              <View style={styles.quickInfoContent}>
+                <Text style={styles.quickInfoLabel}>Center Location</Text>
+                <Text style={styles.quickInfoValue}>
+                  {professional.centerAddress || professional.location || "—"}
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
           {(() => {
             const phone = professional.phone?.trim();
             const email = professional.email?.trim();
@@ -468,6 +508,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: colors.text,
+  },
+  mapsHint: {
+    fontSize: 12,
+    color: colors.primary,
+    marginTop: 4,
+    fontWeight: "500",
   },
   quickInfoDivider: {
     height: 1,

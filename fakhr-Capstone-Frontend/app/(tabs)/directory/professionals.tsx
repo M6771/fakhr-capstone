@@ -209,10 +209,10 @@ export default function ProfessionalsScreen() {
         <Text style={styles.specialtyText}>{professional.specialty}</Text>
       </View>
 
-      {/* Display City */}
-      {professional.city && (
+      {/* Display Location */}
+      {professional.location && (
         <View style={styles.locationContainer}>
-          <Text style={styles.locationText}>📍 {professional.city}</Text>
+          <Text style={styles.locationText}>📍 {professional.location}</Text>
         </View>
       )}
 
@@ -239,10 +239,10 @@ export default function ProfessionalsScreen() {
         )}
       </View>
   
-      {/* Display Tags */}           
-      {professional.tags && professional.tags.length > 0 && (
+      {/* Display Services */}
+      {professional.services && professional.services.length > 0 && (
         <View style={styles.tagsContainer}>
-          {professional.tags.map((tag, index) => (
+          {professional.services.map((tag: string, index: number) => (
             <View key={index} style={styles.tagBadge}>
               <Text style={styles.tagText}>{tag}</Text>
             </View>

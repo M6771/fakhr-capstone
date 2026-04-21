@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { centersListQueryKey, getCenters } from "../../../api/directory.api";
 import {
   ScrollView,
   StyleSheet,
@@ -8,7 +9,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getCenters } from "../../../api/directory.api";
 import {
   cardShadow,
   colors,
@@ -18,60 +18,14 @@ import {
   typography,
 } from "../../../theme";
 import { HealthCenter } from "../../../types/directory.types";
-import { useState } from "react";
-import { getCities, getSpecialties } from "../../../api/directory.api";
 
 export default function CentersScreen() {
-
-  type FilterType = "all" | "public" | "private";
-  
   const router = useRouter();
-  const [filter, setFilter] = useState<FilterType>("all");
-  const [selectedCity, setSelectedCity] = useState<string>("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
 
-    // جلب قائمة المدن
-    const { data: cities = [] } = useQuery({
-      queryKey: ["cities"],
-      queryFn: getCities,
-    });
-  
-    //
-    const { data: specialties = [] } = useQuery({
-      queryKey: ["specialties"],
-      queryFn: getSpecialties,
-    });
-  
-    
-    const { data: centers, isLoading } = useQuery({
-      queryKey: ["centers", filter, selectedCity, selectedTags],
-      queryFn: () =>
-        getCenters({
-          type: filter === "all" ? undefined : filter,
-          city: selectedCity || undefined,
-          specialties: selectedTags.length > 0 ? selectedTags : undefined,
-        }),
-    });
-      
-  const toggleTag = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
-  };
-
-  
-  const clearFilters = () => {
-    setFilter("all");
-    setSelectedCity("");
-    setSelectedTags([]);
-  };
-
-  
-  const activeFiltersCount =
-    (filter !== "all" ? 1 : 0) +
-    (selectedCity ? 1 : 0) +
-    selectedTags.length;
+  const { data: centers, isLoading } = useQuery({
+    queryKey: centersListQueryKey(),
+    queryFn: () => getCenters(),
+  });
 
   if (isLoading) {
     return (

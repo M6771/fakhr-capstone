@@ -20,6 +20,7 @@ import {
 
 export default function CreatePostScreen() {
   const router = useRouter();
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
   const createPostMutation = useMutation({
@@ -30,16 +31,23 @@ export default function CreatePostScreen() {
   });
 
   const handleSubmit = () => {
-    if (!content.trim()) {
+    if (!title.trim() || !content.trim()) {
       return;
     }
-    createPostMutation.mutate({ content });
+    createPostMutation.mutate({ title: title.trim(), content: content.trim() });
   };
 
   return (
     <SafeAreaView style={styles.wrapper} edges={["top"]}>
       <View style={styles.container}>
         <Text style={styles.title}>Create Post</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Post title"
+          placeholderTextColor={colors.textLight}
+          value={title}
+          onChangeText={setTitle}
+        />
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="What's on your mind?"

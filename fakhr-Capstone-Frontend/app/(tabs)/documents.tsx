@@ -107,7 +107,7 @@ export default function ProfessionalsScreen() {
       >
         <Text style={styles.title}>Professionals</Text>
         <Text style={styles.subtitle}>
-          Find specialists for your child's needs
+          Find specialists for your child&apos;s needs
         </Text>
 
         {/* Filter Row */}

@@ -5,7 +5,6 @@ import * as SecureStore from "expo-secure-store";
 import { useState } from "react";
 import {
   Alert,
-  I18nManager,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -17,7 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { login } from "../../api/auth.api";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth, USER_PROFILE_CACHE_KEY } from "../../context/AuthContext";
 
 // Brand colors
 const colors = {
@@ -46,6 +45,10 @@ export default function LoginScreen() {
         await SecureStore.setItemAsync("token", data.token);
       }
       if (data.user) {
+        await SecureStore.setItemAsync(
+          USER_PROFILE_CACHE_KEY,
+          JSON.stringify(data.user)
+        );
         setUser(data.user);
       }
       router.replace("/(tabs)");
@@ -97,7 +100,6 @@ export default function LoginScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 textAlign="right"
-                writingDirection={I18nManager.isRTL ? "rtl" : "rtl"}
               />
             </View>
 
@@ -112,7 +114,6 @@ export default function LoginScreen() {
                   onChangeText={setPassword}
                   secureTextEntry={!isPasswordVisible}
                   textAlign="right"
-                  writingDirection={I18nManager.isRTL ? "rtl" : "rtl"}
                 />
                 <Pressable
                   style={({ pressed }) => [

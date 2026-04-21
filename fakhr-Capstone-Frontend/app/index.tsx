@@ -1,42 +1,28 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import * as SecureStore from "expo-secure-store";
 import { useAuth } from "../context/AuthContext";
 
 /**
- * Root index: redirect based on token presence
+ * Root index: redirect after auth bootstrap (user restored from API or SecureStore cache).
  */
 export default function Index() {
   const router = useRouter();
-  const { loading } = useAuth();
-  const [tokenChecked, setTokenChecked] = useState(false);
+  const { loading, user } = useAuth();
+  const [redirected, setRedirected] = useState(false);
 
   useEffect(() => {
-    const checkToken = async () => {
-      try {
-        const token = await SecureStore.getItemAsync("token");
-        if (token) {
-          // Token exists, redirect to home screen
-          router.replace("/(tabs)");
-        } else {
-          // No token, redirect to login
-          router.replace("/(auth)/login");
-        }
-      } catch {
-        // Error reading token, redirect to login
-        router.replace("/(auth)/login");
-      } finally {
-        setTokenChecked(true);
-      }
-    };
+    if (loading) return;
 
-    if (!loading) {
-      checkToken();
+    if (user) {
+      router.replace("/(tabs)");
+    } else {
+      router.replace("/(auth)/login");
     }
-  }, [loading, router]);
+    setRedirected(true);
+  }, [loading, user, router]);
 
-  if (loading || !tokenChecked) {
-    return null; // Show nothing while checking token
+  if (loading || !redirected) {
+    return null;
   }
 
   return null;

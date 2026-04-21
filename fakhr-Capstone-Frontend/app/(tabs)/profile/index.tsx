@@ -23,7 +23,7 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
 
   // Fetch current user profile from API
-  const { data: currentUser, isLoading, error } = useQuery({
+  const { data: currentUser, isLoading } = useQuery({
     queryKey: ["currentUser"],
     queryFn: getCurrentUser,
     enabled: !!user, // Only fetch if user is logged in

@@ -44,14 +44,14 @@ describe('Button Component', () => {
 
   it('disables button when disabled prop is true', () => {
     const mockOnPress = jest.fn();
-    const { getByText } = render(
+    const { getByRole } = render(
       <Button title="Disabled Button" onPress={mockOnPress} disabled={true} />
     );
     
-    const button = getByText('Disabled Button').parent;
-    expect(button?.props.disabled).toBe(true);
+    const button = getByRole('button');
+    expect(button.props.accessibilityState.disabled).toBe(true);
     
-    fireEvent.press(getByText('Disabled Button'));
+    fireEvent.press(button);
     expect(mockOnPress).not.toHaveBeenCalled();
   });
 

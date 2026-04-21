@@ -13,7 +13,7 @@ import {
 
 export default function CheckInScreen() {
   const [notes, setNotes] = useState("");
-  const [rating, setRating] = useState(0);
+  const rating = 0;
 
   const checkInMutation = useMutation({
     mutationFn: submitCheckIn,

@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import React from "react";
 import {
   Alert,
@@ -63,8 +62,6 @@ const SERVICES = [
 ];
 
 export default function ServicesScreen() {
-  const router = useRouter();
-
   const handleServicePress = (service: (typeof SERVICES)[0]) => {
     Alert.alert(
       service.name,

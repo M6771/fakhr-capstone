@@ -48,7 +48,7 @@ export default function LandingScreen() {
             </View>
             <Text style={styles.benefitTitle}>Personalized Support</Text>
             <Text style={styles.benefitDescription}>
-              Get tailored guidance for your child's unique needs
+              Get tailored guidance for your child&apos;s unique needs
             </Text>
           </Card>
 

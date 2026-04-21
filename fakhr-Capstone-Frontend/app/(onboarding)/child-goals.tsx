@@ -32,7 +32,7 @@ export default function ChildGoalsScreen() {
       >
         <Text style={styles.title}>Goals & Expectations</Text>
         <Text style={styles.subtitle}>
-          What are your goals for your child's progress? What would you like to
+          What are your goals for your child&apos;s progress? What would you like to
           achieve?
         </Text>
         <TextInput

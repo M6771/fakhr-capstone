@@ -8,6 +8,65 @@ export interface CenterFilters {
   specialties?: string[];
 }
 
+/** React Query key — use for home + directory so the same cached list is shared when filters match. */
+export const centersListQueryKey = (filters: CenterFilters = {}) =>
+  [
+    "centers",
+    "list",
+    filters.type ?? "all",
+    filters.city ?? "",
+    [...(filters.specialties ?? [])].sort().join("\0"),
+  ] as const;
+
+function isAxiosLikeResponse(v: unknown): v is { data: unknown; status: number } {
+  return (
+    !!v &&
+    typeof v === "object" &&
+    "data" in v &&
+    "status" in v &&
+    typeof (v as { status: unknown }).status === "number"
+  );
+}
+
+/** Normalize GET /directory/centers body (interceptor usually returns `{ success, data }` but tolerate other shapes). */
+function normalizeCentersResponse(raw: unknown): HealthCenter[] {
+  let payload: unknown = raw;
+
+  if (isAxiosLikeResponse(payload)) {
+    payload = payload.data;
+  }
+
+  if (Array.isArray(payload)) {
+    return payload as HealthCenter[];
+  }
+
+  if (payload && typeof payload === "object" && "data" in payload) {
+    const inner = (payload as { data: unknown }).data;
+    if (Array.isArray(inner)) {
+      return inner as HealthCenter[];
+    }
+    if (
+      inner &&
+      typeof inner === "object" &&
+      "centers" in inner &&
+      Array.isArray((inner as { centers: unknown }).centers)
+    ) {
+      return (inner as { centers: HealthCenter[] }).centers;
+    }
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "centers" in payload &&
+    Array.isArray((payload as { centers: unknown }).centers)
+  ) {
+    return (payload as { centers: HealthCenter[] }).centers;
+  }
+
+  return [];
+}
+
 /**
  * Get health centers
  * GET /api/directory/centers
@@ -18,19 +77,12 @@ export const getCenters = async (filters?: CenterFilters): Promise<HealthCenter[
   if (filters?.type) params.type = filters.type;
   if (filters?.city) params.city = filters.city;
   if (filters?.specialties?.length) {
+    // Backend accepts comma-separated specialties (or specialty) for $in filter
     params.specialties = filters.specialties.join(",");
   }
 
-  const response = await instance.get<{ success: boolean; data: HealthCenter[] | { centers: HealthCenter[] }; pagination?: unknown }>("/directory/centers", { params });
-  // Backend returns data as array directly; handle both formats
-  const data = (response as unknown as { success: boolean; data: HealthCenter[] | { centers: HealthCenter[] } }).data;
-  if (Array.isArray(data)) {
-    return data;
-  }
-  if (data && typeof data === "object" && Array.isArray(data.centers)) {
-    return data.centers;
-  }
-  return [];
+  const raw = await instance.get<unknown>("/directory/centers", { params });
+  return normalizeCentersResponse(raw);
 };
 
 /**
@@ -39,14 +91,17 @@ export const getCenters = async (filters?: CenterFilters): Promise<HealthCenter[
  * Note: This endpoint needs to be implemented in the backend
  */
 export const getCities = async (): Promise<string[]> => {
-  // This endpoint needs to be implemented in the backend
-  // For now, we can extract cities from centers data
+  try {
+    const body = await instance.get<{ success: boolean; data: string[] }>("/directory/centers/cities");
+    const payload = body as unknown as { success?: boolean; data?: string[] };
+    if (Array.isArray(payload.data)) return payload.data;
+  } catch {
+    console.warn("Failed to fetch /directory/centers/cities; falling back to centers list");
+  }
   try {
     const centers = await getCenters();
-    const cities = [...new Set(centers.map((center) => center.city).filter(Boolean))];
-    return cities;
+    return [...new Set(centers.map((center) => center.city).filter(Boolean))] as string[];
   } catch {
-    console.warn("Failed to get cities from centers");
     return [];
   }
 };
@@ -57,19 +112,23 @@ export const getCities = async (): Promise<string[]> => {
  * Note: This endpoint needs to be implemented in the backend
  */
 export const getSpecialties = async (): Promise<string[]> => {
-  // This endpoint needs to be implemented in the backend
-  // For now, we can extract specialties from centers data
+  try {
+    const body = await instance.get<{ success: boolean; data: string[] }>(
+      "/directory/centers/specialties"
+    );
+    const payload = body as unknown as { success?: boolean; data?: string[] };
+    if (Array.isArray(payload.data)) return payload.data.filter((s): s is string => typeof s === "string");
+  } catch {
+    console.warn("Failed to fetch /directory/centers/specialties; falling back to centers list");
+  }
   try {
     const centers = await getCenters();
     const specialties = new Set<string>();
     centers.forEach((center) => {
-      if (center.specialties) {
-        center.specialties.forEach((spec) => specialties.add(spec));
-      }
+      center.specialties?.forEach((spec) => specialties.add(spec));
     });
     return Array.from(specialties);
   } catch {
-    console.warn("Failed to get specialties from centers");
     return [];
   }
 };

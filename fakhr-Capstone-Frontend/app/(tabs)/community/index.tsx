@@ -25,7 +25,7 @@ export default function CommunityScreen() {
         {/* Description - Three-line text, centered, lighter grey */}
         <Text style={styles.description}>
           Connect with other families, share experiences, and find support.
-          You're part of a caring community.
+          You&apos;re part of a caring community.
         </Text>
       </View>
     </SafeAreaView>

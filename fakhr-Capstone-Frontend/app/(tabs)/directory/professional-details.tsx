@@ -1,10 +1,42 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Linking } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+  ActivityIndicator,
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getProfessionalDetails } from "../../../api/directory.api";
+import type { Professional } from "../../../types/directory.types";
 import { colors, sectionSpacing, spacing, typography } from "../../../theme";
+import { openInGoogleMaps, toFiniteNumber } from "../../../utils/openMaps";
+
+function openCenterInGoogleMaps(p: Professional) {
+  void openInGoogleMaps({
+    mapUrl: p.centerMapUrl,
+    latitude: p.centerLatitude,
+    longitude: p.centerLongitude,
+    addressLine: p.centerAddress || p.location,
+    placeName: p.centerName,
+  });
+}
+
+function canOpenCenterInMaps(p: Professional): boolean {
+  const lat = toFiniteNumber(p.centerLatitude);
+  const lng = toFiniteNumber(p.centerLongitude);
+  return Boolean(
+    p.centerMapUrl?.trim() ||
+      (lat !== null && lng !== null) ||
+      (p.centerAddress || p.location || "").trim() ||
+      p.centerName?.trim()
+  );
+}
 
 export default function ProfessionalDetailsScreen() {
   const router = useRouter();
@@ -18,15 +50,17 @@ export default function ProfessionalDetailsScreen() {
   });
 
   const handleCall = () => {
-    if (professional?.phone) {
-      Linking.openURL(`tel:${professional.phone}`);
-    }
+    const n =
+      professional?.phone?.trim() ||
+      professional?.centerPhone?.toString?.()?.trim();
+    if (n) Linking.openURL(`tel:${n}`);
   };
 
   const handleEmail = () => {
-    if (professional?.email) {
-      Linking.openURL(`mailto:${professional.email}`);
-    }
+    const e =
+      professional?.email?.trim() ||
+      professional?.centerEmail?.toString?.()?.trim();
+    if (e) Linking.openURL(`mailto:${e}`);
   };
 
   const renderStars = (rating: number) => {
@@ -117,7 +151,7 @@ export default function ProfessionalDetailsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>{professional?.name}</Text>
+        <Text style={styles.professionalName}>{professional?.name}</Text>
         
         {/* Specialty */}
         <View style={styles.section}>
@@ -138,46 +172,79 @@ export default function ProfessionalDetailsScreen() {
         {/* Contact Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Contact</Text>
-          {professional?.phone && (
+          {(professional.phone?.trim() ||
+            professional.centerPhone?.toString?.()?.trim()) && (
             <TouchableOpacity style={styles.infoRow} onPress={handleCall}>
               <Text style={styles.infoLabel}>Phone</Text>
-              <Text style={styles.infoLink}>📞 {professional.phone}</Text>
+              <Text style={styles.infoLink}>
+                📞{" "}
+                {professional.phone?.trim() || professional.centerPhone}
+              </Text>
             </TouchableOpacity>
           )}
-          {professional?.email && (
+          {(professional.email?.trim() ||
+            professional.centerEmail?.toString?.()?.trim()) && (
             <TouchableOpacity style={styles.infoRow} onPress={handleEmail}>
               <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoLink}>✉️ {professional.email}</Text>
+              <Text style={styles.infoLink}>
+                ✉️ {professional.email?.trim() || professional.centerEmail}
+              </Text>
             </TouchableOpacity>
           )}
         </View>
 
-        {/* Location */}
-        {(professional?.city || professional?.address) && (
+        {/* Location — same Maps behavior as Professionals tab detail */}
+        {(professional.location ||
+          professional.centerAddress ||
+          professional.centerName ||
+          canOpenCenterInMaps(professional)) && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Location</Text>
-            {professional?.address && (
-              <Text style={styles.infoValue}>📍 {professional.address}</Text>
+            {canOpenCenterInMaps(professional) ? (
+              <TouchableOpacity
+                style={styles.mapsRow}
+                activeOpacity={0.7}
+                onPress={() => openCenterInGoogleMaps(professional)}
+              >
+                {professional.centerName ? (
+                  <Text style={styles.infoValue}>🏥 {professional.centerName}</Text>
+                ) : null}
+                <Text style={styles.infoValue}>
+                  📍{" "}
+                  {professional.centerAddress ||
+                    professional.location ||
+                    professional.centerName ||
+                    "—"}
+                </Text>
+                {professional.centerAddress &&
+                  professional.location &&
+                  professional.centerAddress.trim() !==
+                    professional.location.trim() && (
+                    <Text style={styles.cityText}>{professional.location}</Text>
+                  )}
+                <Text style={styles.mapsHint}>Tap to open in Maps</Text>
+              </TouchableOpacity>
+            ) : (
+              <>
+                {professional.location ? (
+                  <Text style={styles.infoValue}>📍 {professional.location}</Text>
+                ) : null}
+                {professional.centerAddress ? (
+                  <Text style={styles.cityText}>{professional.centerAddress}</Text>
+                ) : null}
+                {professional.centerName ? (
+                  <Text style={styles.infoValue}>🏥 {professional.centerName}</Text>
+                ) : null}
+              </>
             )}
-            {professional?.city && (
-              <Text style={styles.cityText}>{professional.city}</Text>
-            )}
-          </View>
-        )}
-
-        {/* Center */}
-        {professional?.centerName && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Center</Text>
-            <Text style={styles.infoValue}>🏥 {professional.centerName}</Text>
           </View>
         )}
 
         {/* Description */}
-        {professional?.description && (
+        {professional?.bio && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>About</Text>
-            <Text style={styles.description}>{professional.description}</Text>
+            <Text style={styles.bioText}>{professional.bio}</Text>
           </View>
         )} 
       </ScrollView>
@@ -336,6 +403,15 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: spacing.xs,
   },
+  mapsRow: {
+    paddingVertical: spacing.xs,
+  },
+  mapsHint: {
+    fontSize: 12,
+    color: colors.primary,
+    marginTop: spacing.sm,
+    fontWeight: "500",
+  },
   statDivider: {
     width: 1,
     backgroundColor: colors.border,
@@ -377,11 +453,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     marginVertical: 4,
   },
-  // Section
-  section: {
+  // Legacy section variants (kept for future UI blocks)
+  detailSection: {
     marginBottom: 24,
   },
-  sectionTitle: {
+  detailSectionTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: colors.text,

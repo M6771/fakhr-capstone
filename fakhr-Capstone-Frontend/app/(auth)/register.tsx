@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { register } from "../../api/auth.api";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth, USER_PROFILE_CACHE_KEY } from "../../context/AuthContext";
 
 // Design system colors
 const colors = {
@@ -48,18 +48,21 @@ export default function RegisterScreen() {
   const registerMutation = useMutation({
     mutationFn: register,
     onSuccess: async (data) => {
-      if (data.token) {
-        await SecureStore.setItemAsync("token", data.token);
+      if (!data?.token || !data?.user) {
+        Alert.alert(
+          "Something went wrong",
+          "We could not save your session. Please sign in with your new account."
+        );
+        router.replace("/(auth)/login");
+        return;
       }
-      if (data.user) {
-        setUser(data.user);
-      }
-      Alert.alert("Success", "Account created successfully!", [
-        {
-          text: "OK",
-          onPress: () => router.replace("/(tabs)"),
-        },
-      ]);
+      await SecureStore.setItemAsync("token", data.token);
+      await SecureStore.setItemAsync(
+        USER_PROFILE_CACHE_KEY,
+        JSON.stringify(data.user)
+      );
+      setUser(data.user);
+      router.replace("/(tabs)");
     },
     onError: (error: any) => {
       const errorMessage = error?.message || error?.response?.data?.message || "Failed to create account. Please try again.";
