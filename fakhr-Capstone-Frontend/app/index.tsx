@@ -1,29 +1,31 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { CreateAccountScreen } from "../components/screens/CreateAccountScreen";
 import { useAuth } from "../context/AuthContext";
 
 /**
- * Root index: redirect after auth bootstrap (user restored from API or SecureStore cache).
+ * Root index: authenticated users go to tabs; guests land on Create Account (MVP entry).
  */
 export default function Index() {
   const router = useRouter();
   const { loading, user } = useAuth();
-  const [redirected, setRedirected] = useState(false);
+  const [bootstrapped, setBootstrapped] = useState(false);
 
   useEffect(() => {
     if (loading) return;
-
     if (user) {
       router.replace("/(tabs)");
-    } else {
-      router.replace("/(auth)/login");
     }
-    setRedirected(true);
+    setBootstrapped(true);
   }, [loading, user, router]);
 
-  if (loading || !redirected) {
+  if (loading || !bootstrapped) {
     return null;
   }
 
-  return null;
+  if (user) {
+    return null;
+  }
+
+  return <CreateAccountScreen />;
 }

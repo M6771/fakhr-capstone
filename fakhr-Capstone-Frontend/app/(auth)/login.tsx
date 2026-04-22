@@ -168,7 +168,7 @@ export default function LoginScreen() {
                 styles.btnSecondary,
                 pressed && { opacity: 0.85 },
               ]}
-              onPress={() => router.push("/(auth)/register")}
+              onPress={() => router.push("/")}
             >
               <Text style={styles.btnSecondaryText}>إنشاء حساب جديد</Text>
             </Pressable>
