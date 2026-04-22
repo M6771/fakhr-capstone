@@ -1,10 +1,9 @@
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { CreateAccountScreen } from "../components/screens/CreateAccountScreen";
 import { useAuth } from "../context/AuthContext";
 
 /**
- * Root index: authenticated users go to tabs; guests land on Create Account (MVP entry).
+ * Root index: authenticated users → tabs; guests → signup stack (Create Account first).
  */
 export default function Index() {
   const router = useRouter();
@@ -27,5 +26,5 @@ export default function Index() {
     return null;
   }
 
-  return <CreateAccountScreen />;
+  return <Redirect href="/(signup)" />;
 }

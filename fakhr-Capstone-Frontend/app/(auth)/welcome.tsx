@@ -30,7 +30,7 @@ export default function WelcomeScreen() {
   // Note: This screen is pre-authentication, so we can't fetch centers data
   // The health center card will navigate to the centers screen after login
   const handleGetStarted = () => {
-    router.replace("/");
+    router.replace("/(signup)");
   };
 
   const handleAlreadyHaveAccount = () => {

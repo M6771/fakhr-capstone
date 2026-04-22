@@ -17,21 +17,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { register } from "../../api/auth.api";
+import { signupColors as colors } from "../../constants/signupTheme";
 import { useAuth, USER_PROFILE_CACHE_KEY } from "../../context/AuthContext";
-
-const colors = {
-  bgApp: "#F9F9F9",
-  primary: "#949AB1",
-  primaryDark: "#7A8199",
-  text: "#1F2430",
-  textMuted: "#6B7280",
-  textLight: "#9CA3AF",
-  white: "#FFFFFF",
-  border: "rgba(0, 0, 0, 0.06)",
-  inputBorder: "rgba(0, 0, 0, 0.08)",
-  googleBlue: "#4285F4",
-  facebookBlue: "#1877F2",
-};
 
 export function CreateAccountScreen() {
   const router = useRouter();
@@ -59,7 +46,7 @@ export function CreateAccountScreen() {
         JSON.stringify(data.user)
       );
       setUser(data.user);
-      router.replace("/(tabs)");
+      router.replace("/(signup)/child-profile-setup");
     },
     onError: (error: unknown) => {
       const err = error as { message?: string; response?: { data?: { message?: string } } };
