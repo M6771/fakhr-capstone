@@ -12,4 +12,6 @@ export const libraryColors = {
   videoBadgeBg: "rgba(0, 0, 0, 0.72)",
   infographicSurface: "#E4E6EF",
   fabShadow: "rgba(0, 0, 0, 0.2)",
+  /** Small floating shield / help control (community). */
+  shieldFab: "#2C3555",
 };

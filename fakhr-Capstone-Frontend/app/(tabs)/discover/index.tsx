@@ -1,0 +1,103 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React from "react";
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { libraryColors as c } from "../../../constants/libraryTheme";
+
+/**
+ * Discover tab — browse Library, Directory, and resources (expand when wired to APIs).
+ */
+export default function DiscoverScreen() {
+  const router = useRouter();
+
+  return (
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <View style={styles.body}>
+        <Text style={styles.title}>Discover</Text>
+        <Text style={styles.sub}>
+          Explore guides, centers, and curated content for your family.
+        </Text>
+
+        <Pressable
+          style={styles.linkCard}
+          onPress={() => router.push("/(tabs)/library")}
+        >
+          <Ionicons name="library-outline" size={24} color={c.primary} />
+          <View style={styles.linkText}>
+            <Text style={styles.linkTitle}>Fakhr Library</Text>
+            <Text style={styles.linkSub}>Videos, articles, and guides</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={c.textLight} />
+        </Pressable>
+
+        <Pressable
+          style={styles.linkCard}
+          onPress={() => router.push("/(tabs)/directory")}
+        >
+          <Ionicons name="business-outline" size={24} color={c.primary} />
+          <View style={styles.linkText}>
+            <Text style={styles.linkTitle}>Centers & Professionals</Text>
+            <Text style={styles.linkSub}>Book appointments near you</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={c.textLight} />
+        </Pressable>
+
+        <Pressable
+          style={styles.linkCard}
+          onPress={() =>
+            Alert.alert("Coming soon", "Personalized picks based on your child profile.")
+          }
+        >
+          <Ionicons name="sparkles-outline" size={24} color={c.primary} />
+          <View style={styles.linkText}>
+            <Text style={styles.linkTitle}>For you</Text>
+            <Text style={styles.linkSub}>ADHD, Autism, school readiness & more</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={c.textLight} />
+        </Pressable>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.bgApp },
+  body: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 120,
+  },
+  title: { fontSize: 26, fontWeight: "800", color: c.text, marginBottom: 8 },
+  sub: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: c.textMuted,
+    marginBottom: 24,
+  },
+  linkCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: c.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.inputBorder,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  linkText: { flex: 1, marginLeft: 12 },
+  linkTitle: { fontSize: 16, fontWeight: "700", color: c.text },
+  linkSub: { fontSize: 13, color: c.textMuted, marginTop: 2 },
+});
