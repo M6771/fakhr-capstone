@@ -2,14 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { CommonActions } from "@react-navigation/native";
 import React from "react";
-import {
-  Alert,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { libraryColors as c } from "../../constants/libraryTheme";
 
@@ -19,7 +12,7 @@ export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps
   const barHeight = 56;
   const focusedRoute = state.routes[state.index]?.name;
 
-  const renderTab = (name: "index" | "library" | "community" | "profile") => {
+  const renderTab = (name: "index" | "directory" | "bookings" | "profile") => {
     const route = state.routes.find((r) => r.name === name);
     if (!route) return <View key={name} style={styles.tab} />;
     const opts = descriptors[route.key].options;
@@ -29,8 +22,10 @@ export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps
 
     let iconName: React.ComponentProps<typeof Ionicons>["name"] = "ellipse-outline";
     if (name === "index") iconName = focused ? "home" : "home-outline";
-    if (name === "library") iconName = focused ? "library" : "library-outline";
-    if (name === "community") iconName = focused ? "people" : "people-outline";
+    if (name === "directory")
+      iconName = focused ? "business" : "business-outline";
+    if (name === "bookings")
+      iconName = focused ? "calendar" : "calendar-outline";
     if (name === "profile") iconName = focused ? "person" : "person-outline";
 
     const onPress = () => {
@@ -75,25 +70,10 @@ export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps
     >
       <View style={[styles.row, { minHeight: barHeight }]}>
         {renderTab("index")}
-        {renderTab("library")}
-        <View style={styles.fabSpacer} />
-        {renderTab("community")}
+        {renderTab("directory")}
+        {renderTab("bookings")}
         {renderTab("profile")}
       </View>
-      <Pressable
-        accessibilityRole="button"
-        style={[
-          styles.fab,
-          {
-            bottom: bottomPad + barHeight - 28,
-          },
-        ]}
-        onPress={() =>
-          Alert.alert("Fakhr Library", "Add new content (coming soon).")
-        }
-      >
-        <Ionicons name="add" size={32} color={c.white} />
-      </Pressable>
     </View>
   );
 }
@@ -111,7 +91,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: Platform.OS === "android" ? 12 : 0,
+    elevation: 12,
   },
   row: {
     flexDirection: "row",
@@ -123,28 +103,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 4,
   },
-  fabSpacer: {
-    width: 56,
-  },
   label: {
     fontSize: 10,
     fontWeight: "500",
     marginTop: 2,
-  },
-  fab: {
-    position: "absolute",
-    left: "50%",
-    marginLeft: -28,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: c.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
   },
 });

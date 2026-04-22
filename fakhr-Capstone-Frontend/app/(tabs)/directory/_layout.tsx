@@ -4,7 +4,7 @@ import { Pressable } from "react-native";
 import { colors, typography } from "../../../theme";
 
 /**
- * Directory Stack Layout — Directory screens with back button
+ * Directory stack: Centers & Professionals hub (index), booking flow, and legacy directory screens.
  */
 export default function DirectoryLayout() {
   const router = useRouter();
@@ -32,6 +32,8 @@ export default function DirectoryLayout() {
         animation: "slide_from_right",
       }}
     >
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="booking" options={{ headerShown: false }} />
       <Stack.Screen
         name="centers"
         options={{
@@ -91,7 +93,7 @@ export default function DirectoryLayout() {
       <Stack.Screen
         name="helpCenter"
         options={{
-          headerShown: false, // We have a custom header in the component
+          headerShown: false,
         }}
       />
     </Stack>
