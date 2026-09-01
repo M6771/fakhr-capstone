@@ -1,15 +1,27 @@
+import { useLocales } from "expo-localization";
 import {
   createContext,
   ReactNode,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
-import i18n, { setLocale } from "../i18n";
+import { useTranslation } from "react-i18next";
+import {
+  applyLayoutDirection,
+  changeAppLanguage,
+  getDeviceLanguage,
+  normalizeLanguage,
+  reloadForLayoutDirection,
+  resolveStoredOrDeviceLanguage,
+  type AppLanguage,
+} from "../i18n";
 
 interface LanguageContextType {
-  locale: "en";
-  setLocale: (locale: "en") => void;
+  locale: AppLanguage;
+  isRTL: boolean;
+  setLocale: (locale: AppLanguage) => void;
   t: (key: string, options?: object) => string;
 }
 
@@ -18,26 +30,64 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 );
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // English only
-  const [locale, setLocaleState] = useState<"en">("en");
+  const { t, i18n } = useTranslation();
+  const deviceLocales = useLocales();
+  const [locale, setLocaleState] = useState<AppLanguage>(() =>
+    normalizeLanguage(i18n.language)
+  );
 
   useEffect(() => {
-    setLocale("en");
-  }, []);
+    let cancelled = false;
 
-  const handleSetLocale = (newLocale: "en") => {
-    setLocaleState(newLocale);
-    setLocale(newLocale);
-  };
+    const syncLanguage = async () => {
+      const resolved = await resolveStoredOrDeviceLanguage(deviceLocales);
+      if (cancelled) return;
 
-  const t = (key: string, options?: object): string => {
-    return i18n.t(key, options);
-  };
+      const needsReload = applyLayoutDirection(resolved);
+      if (normalizeLanguage(i18n.language) !== resolved) {
+        await i18n.changeLanguage(resolved);
+      }
+      if (!cancelled) {
+        setLocaleState(resolved);
+      }
+      if (needsReload) {
+        await reloadForLayoutDirection();
+      }
+    };
+
+    void syncLanguage();
+    return () => {
+      cancelled = true;
+    };
+  }, [deviceLocales, i18n]);
+
+  useEffect(() => {
+    const onChanged = (lng: string) => {
+      setLocaleState(normalizeLanguage(lng));
+    };
+    i18n.on("languageChanged", onChanged);
+    return () => {
+      i18n.off("languageChanged", onChanged);
+    };
+  }, [i18n]);
+
+  const isRTL = locale === "ar";
+
+  const value = useMemo<LanguageContextType>(
+    () => ({
+      locale,
+      isRTL,
+      setLocale: (newLocale: AppLanguage) => {
+        setLocaleState(newLocale);
+        void changeAppLanguage(newLocale);
+      },
+      t: (key: string, options?: object) => String(t(key, options)),
+    }),
+    [locale, isRTL, t]
+  );
 
   return (
-    <LanguageContext.Provider
-      value={{ locale: "en", setLocale: handleSetLocale, t }}
-    >
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );
@@ -50,3 +100,5 @@ export function useLanguage() {
   }
   return context;
 }
+
+export { getDeviceLanguage };

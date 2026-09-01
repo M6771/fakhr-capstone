@@ -6,6 +6,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  I18nManager,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,11 +17,17 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { register } from "../../api/auth.api";
 import { signupColors as colors } from "../../constants/signupTheme";
 import { useAuth, USER_PROFILE_CACHE_KEY } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 export function CreateAccountScreen() {
+  const { t } = useTranslation();
+  const { locale, setLocale } = useLanguage();
+  const isRTL = locale === "ar";
+  const reverseRows = isRTL !== I18nManager.isRTL;
   const router = useRouter();
   const { setUser } = useAuth();
   const [name, setName] = useState("");
@@ -33,10 +40,7 @@ export function CreateAccountScreen() {
     mutationFn: register,
     onSuccess: async (data) => {
       if (!data?.token || !data?.user) {
-        Alert.alert(
-          "Something went wrong",
-          "We could not save your session. Please sign in with your new account."
-        );
+        Alert.alert(t("signup.sessionErrorTitle"), t("signup.sessionError"));
         router.replace("/(auth)/login");
         return;
       }
@@ -53,8 +57,8 @@ export function CreateAccountScreen() {
       const msg =
         err?.message ||
         err?.response?.data?.message ||
-        "Failed to create account. Please try again.";
-      Alert.alert("Registration Failed", msg);
+        t("signup.createAccountFailed");
+      Alert.alert(t("signup.registrationFailed"), msg);
     },
   });
 
@@ -72,20 +76,20 @@ export function CreateAccountScreen() {
 
   const handleSignUp = () => {
     if (!name.trim() || !email.trim() || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+      Alert.alert(t("common.error"), t("signup.fillAllFields"));
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      Alert.alert("Error", "Please enter a valid email address");
+      Alert.alert(t("common.error"), t("signup.invalidEmail"));
       return;
     }
     if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters");
+      Alert.alert(t("common.error"), t("signup.passwordTooShort"));
       return;
     }
     if (!agreedToTerms) {
-      Alert.alert("Error", "Please agree to the Terms & Privacy");
+      Alert.alert(t("common.error"), t("signup.mustAgreeToTerms"));
       return;
     }
     registerMutation.mutate({
@@ -109,16 +113,33 @@ export function CreateAccountScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <View style={styles.headerRow}>
+          <View style={[styles.headerRow, reverseRows && styles.rowReverse]}>
             <Pressable
               onPress={handleBack}
               hitSlop={12}
               style={({ pressed }) => [styles.backBtn, pressed && styles.pressed]}
             >
-              <Ionicons name="chevron-back" size={26} color={colors.text} />
+              <Ionicons
+                name={isRTL ? "chevron-forward" : "chevron-back"}
+                size={26}
+                color={colors.text}
+              />
             </Pressable>
-            <Text style={styles.headerTitle}>Create Account</Text>
-            <View style={styles.headerSpacer} />
+            <Text style={[styles.headerTitle, isRTL && styles.textRtl]}>
+              {t("signup.headerTitle")}
+            </Text>
+            <Pressable
+              onPress={() => setLocale(isRTL ? "en" : "ar")}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.langToggle,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.langToggleText}>
+                {isRTL ? t("signup.useEnglish") : t("signup.useArabic")}
+              </Text>
+            </Pressable>
           </View>
 
           {/* Logo */}
@@ -128,73 +149,87 @@ export function CreateAccountScreen() {
             </View>
           </View>
 
-          <Text style={styles.heroTitle}>Join Fakhr</Text>
-          <Text style={styles.heroSubtitle}>
-            Start your journey with a calm mind and organized soul.
+          <Text style={[styles.heroTitle, isRTL && styles.textRtl]}>
+            {t("signup.joinTitle")}
+          </Text>
+          <Text style={[styles.heroSubtitle, isRTL && styles.textRtl]}>
+            {t("signup.subtitle")}
           </Text>
 
           {/* Full Name */}
-          <Text style={styles.label}>Full Name</Text>
-          <View style={styles.inputRow}>
+          <Text style={[styles.label, isRTL && styles.textRtl]}>
+            {t("signup.fullName")}
+          </Text>
+          <View style={[styles.inputRow, reverseRows && styles.rowReverse]}>
             <Ionicons
               name="person-outline"
               size={20}
               color={colors.textLight}
-              style={styles.inputIcon}
+              style={isRTL ? styles.inputIconRtl : styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
-              placeholder="Enter your name"
+              style={[styles.input, isRTL && styles.inputRtl]}
+              placeholder={t("signup.fullNamePlaceholder")}
               placeholderTextColor={colors.textLight}
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
               autoCorrect={false}
+              textAlign={isRTL ? "right" : "left"}
             />
           </View>
 
           {/* Email */}
-          <Text style={styles.label}>Email Address</Text>
-          <View style={styles.inputRow}>
+          <Text style={[styles.label, isRTL && styles.textRtl]}>
+            {t("signup.email")}
+          </Text>
+          <View style={[styles.inputRow, reverseRows && styles.rowReverse]}>
             <Ionicons
               name="mail-outline"
               size={20}
               color={colors.textLight}
-              style={styles.inputIcon}
+              style={isRTL ? styles.inputIconRtl : styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
-              placeholder="example@fakhr.com"
+              style={[styles.input, isRTL && styles.inputRtl]}
+              placeholder={t("signup.emailPlaceholder")}
               placeholderTextColor={colors.textLight}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              textAlign={isRTL ? "right" : "left"}
             />
           </View>
 
           {/* Password */}
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.inputRow}>
+          <Text style={[styles.label, isRTL && styles.textRtl]}>
+            {t("signup.password")}
+          </Text>
+          <View style={[styles.inputRow, reverseRows && styles.rowReverse]}>
             <Ionicons
               name="lock-closed-outline"
               size={20}
               color={colors.textLight}
-              style={styles.inputIcon}
+              style={isRTL ? styles.inputIconRtl : styles.inputIcon}
             />
             <TextInput
-              style={[styles.input, styles.inputPassword]}
-              placeholder="••••••••"
+              style={[styles.input, styles.inputPassword, isRTL && styles.inputRtl]}
+              placeholder={t("signup.passwordPlaceholder")}
               placeholderTextColor={colors.textLight}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
+              textAlign={isRTL ? "right" : "left"}
             />
             <Pressable
               onPress={() => setShowPassword((v) => !v)}
               hitSlop={10}
               style={({ pressed }) => [styles.eyeBtn, pressed && styles.pressed]}
+              accessibilityLabel={
+                showPassword ? t("auth.hidePassword") : t("auth.showPassword")
+              }
             >
               <Ionicons
                 name={showPassword ? "eye-off-outline" : "eye-outline"}
@@ -206,12 +241,13 @@ export function CreateAccountScreen() {
 
           {/* Terms */}
           <Pressable
-            style={styles.termsRow}
+            style={[styles.termsRow, reverseRows && styles.rowReverse]}
             onPress={() => setAgreedToTerms((v) => !v)}
           >
             <View
               style={[
                 styles.checkboxOuter,
+                isRTL ? styles.checkboxOuterRtl : null,
                 agreedToTerms && styles.checkboxOuterChecked,
               ]}
             >
@@ -219,9 +255,9 @@ export function CreateAccountScreen() {
                 <Ionicons name="checkmark" size={14} color={colors.white} />
               ) : null}
             </View>
-            <Text style={styles.termsText}>
-              I agree to the{" "}
-              <Text style={styles.termsLink}>Terms & Privacy</Text>
+            <Text style={[styles.termsText, isRTL && styles.textRtl]}>
+              {t("signup.agreeToTermsText")}{" "}
+              <Text style={styles.termsLink}>{t("signup.termsPrivacy")}</Text>
             </Text>
           </Pressable>
 
@@ -229,6 +265,7 @@ export function CreateAccountScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.signUpBtn,
+              reverseRows && styles.rowReverse,
               registerMutation.isPending && styles.signUpBtnDisabled,
               pressed && styles.pressed,
             ]}
@@ -239,8 +276,12 @@ export function CreateAccountScreen() {
               <ActivityIndicator color={colors.white} />
             ) : (
               <>
-                <Text style={styles.signUpText}>Sign Up</Text>
-                <Ionicons name="arrow-forward" size={20} color={colors.white} />
+                <Text style={styles.signUpText}>{t("signup.signUp")}</Text>
+                <Ionicons
+                  name={isRTL ? "arrow-back" : "arrow-forward"}
+                  size={20}
+                  color={colors.white}
+                />
               </>
             )}
           </Pressable>
@@ -248,47 +289,49 @@ export function CreateAccountScreen() {
           {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR SIGN UP WITH</Text>
+            <Text style={styles.dividerText}>{t("signup.orSignUpWith")}</Text>
             <View style={styles.dividerLine} />
           </View>
 
           {/* Social */}
-          <View style={styles.socialRow}>
+          <View style={[styles.socialRow, reverseRows && styles.rowReverse]}>
             <Pressable
               style={({ pressed }) => [
                 styles.socialBtn,
+                reverseRows && styles.rowReverse,
                 pressed && styles.pressed,
               ]}
               onPress={() =>
-                Alert.alert("Google", "Google sign-up is not available yet.")
+                Alert.alert(t("signup.google"), t("signup.googleUnavailable"))
               }
             >
               <View style={styles.googleMark}>
                 <Text style={styles.googleG}>G</Text>
               </View>
-              <Text style={styles.socialLabel}>Google</Text>
+              <Text style={styles.socialLabel}>{t("signup.google")}</Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [
                 styles.socialBtn,
+                reverseRows && styles.rowReverse,
                 pressed && styles.pressed,
               ]}
               onPress={() =>
-                Alert.alert("Facebook", "Facebook sign-up is not available yet.")
+                Alert.alert(t("signup.facebook"), t("signup.facebookUnavailable"))
               }
             >
               <View style={styles.fbMark}>
                 <Text style={styles.fbF}>f</Text>
               </View>
-              <Text style={styles.socialLabel}>Facebook</Text>
+              <Text style={styles.socialLabel}>{t("signup.facebook")}</Text>
             </Pressable>
           </View>
 
           {/* Footer */}
-          <View style={styles.footer}>
-            <Text style={styles.footerMuted}>Already have an account? </Text>
+          <View style={[styles.footer, reverseRows && styles.rowReverse]}>
+            <Text style={styles.footerMuted}>{t("signup.alreadyHaveAccount")} </Text>
             <Pressable onPress={() => router.push("/(auth)/login")}>
-              <Text style={styles.footerLink}>Log In</Text>
+              <Text style={styles.footerLink}>{t("signup.logIn")}</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -331,6 +374,29 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40,
+  },
+  langToggle: {
+    minWidth: 40,
+    height: 32,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.white,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.inputBorder,
+  },
+  langToggleText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  rowReverse: {
+    flexDirection: "row-reverse",
+  },
+  textRtl: {
+    textAlign: "right",
+    writingDirection: "rtl",
   },
   logoWrap: {
     alignItems: "center",
@@ -383,13 +449,20 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   inputIcon: {
-    marginRight: 10,
+    marginEnd: 10,
+  },
+  inputIconRtl: {
+    marginStart: 10,
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: colors.text,
     paddingVertical: 14,
+  },
+  inputRtl: {
+    textAlign: "right",
+    writingDirection: "rtl",
   },
   inputPassword: {
     paddingRight: 8,
@@ -409,7 +482,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     borderWidth: 2,
     borderColor: colors.textLight,
-    marginRight: 12,
+    marginEnd: 12,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.white,
@@ -417,6 +490,10 @@ const styles = StyleSheet.create({
   checkboxOuterChecked: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
+  },
+  checkboxOuterRtl: {
+    marginEnd: 0,
+    marginStart: 12,
   },
   termsText: {
     flex: 1,

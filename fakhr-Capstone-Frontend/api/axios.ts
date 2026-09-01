@@ -12,19 +12,44 @@ function normalizeApiBase(url: string): string {
   return s;
 }
 
+function isLoopbackHost(host: string): boolean {
+  const h = host.toLowerCase();
+  return h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "10.0.2.2";
+}
+
+/** Metro host from Expo (e.g. 192.168.8.155:8081 or localhost:8081). */
+function getExpoMetroHost(): string | null {
+  const hostUri =
+    Constants.expoConfig?.hostUri ||
+    Constants.linkingUri ||
+    "";
+  const match = String(hostUri).match(
+    /(\d{1,3}(?:\.\d{1,3}){3}|localhost|127\.0\.0\.1)/i
+  );
+  return match?.[1] ?? null;
+}
+
 /**
  * Resolve API base URL.
- * - Physical device: EXPO_PUBLIC_API_URL (your Mac LAN IP + /api).
+ * - Physical device (Expo Go): EXPO_PUBLIC_API_URL, or the same LAN IP Metro uses.
  * - iOS Simulator / Android Emulator (dev): 127.0.0.1 or 10.0.2.2 so a stale hotspot IP in .env does not break requests.
  *   Set EXPO_PUBLIC_API_STRICT=1 to force using EXPO_PUBLIC_API_URL on simulators (e.g. API on another machine).
+ *
+ * Do not use Constants.isDevice — it is gone in current Expo and was always false,
+ * which sent real phones to 127.0.0.1 (the phone itself).
  */
 const getApiUrl = () => {
   const explicit = process.env.EXPO_PUBLIC_API_URL?.trim();
   const strict = process.env.EXPO_PUBLIC_API_STRICT === "1";
   const isDev = typeof __DEV__ !== "undefined" && __DEV__;
-  const isPhysicalDevice = Constants.isDevice === true;
+  const metroHost = getExpoMetroHost();
+  const runningOnSimulator = Boolean(metroHost && isLoopbackHost(metroHost));
 
-  if (isDev && !strict && !isPhysicalDevice) {
+  if (strict && explicit) {
+    return normalizeApiBase(explicit);
+  }
+
+  if (isDev && runningOnSimulator) {
     if (Platform.OS === "ios") {
       return normalizeApiBase("http://127.0.0.1:8000");
     }
@@ -34,6 +59,14 @@ const getApiUrl = () => {
     if (Platform.OS === "web") {
       return normalizeApiBase(explicit || "http://localhost:8000");
     }
+  }
+
+  if (explicit && !isLoopbackHost(explicit.replace(/^https?:\/\//, "").split(/[/:]/)[0] ?? "")) {
+    return normalizeApiBase(explicit);
+  }
+
+  if (metroHost && !isLoopbackHost(metroHost)) {
+    return normalizeApiBase(`http://${metroHost}:8000`);
   }
 
   if (explicit) {
@@ -103,7 +136,10 @@ instance.interceptors.response.use(
       }
 
       // Add helpful guidance for localhost issues
-      if (apiUrl.includes("localhost") && Platform.OS !== "web") {
+      if (
+        (apiUrl.includes("localhost") || apiUrl.includes("127.0.0.1")) &&
+        Platform.OS !== "web"
+      ) {
         errorMessage +=
           "\n\n⚠️ localhost does not work on mobile devices/simulators.\n" +
           "Please configure EXPO_PUBLIC_API_URL in .env file with your IP address.\n" +

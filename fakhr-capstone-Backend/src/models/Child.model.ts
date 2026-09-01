@@ -9,6 +9,8 @@ export interface IChild extends Document {
   medicalHistory?: string;
   medications?: string;
   allergies?: string;
+  areasOfFocus?: string;
+  supportGoals?: string;
   parentId: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +50,14 @@ const childSchema = new Schema<IChild>(
       trim: true,
     },
     allergies: {
+      type: String,
+      trim: true,
+    },
+    areasOfFocus: {
+      type: String,
+      trim: true,
+    },
+    supportGoals: {
       type: String,
       trim: true,
     },

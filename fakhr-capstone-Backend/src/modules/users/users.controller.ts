@@ -59,7 +59,7 @@ export const getUserById = async (
 
     const { userId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid("userId")) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       throw ApiError.badRequest("Invalid user ID format");
     }
 
@@ -106,10 +106,12 @@ export const updateUser = async (
       throw ApiError.unauthorized("User not authenticated");
     }
 
-    const { userId } = req.params;
+    const userId = Array.isArray(req.params.userId)
+      ? req.params.userId[0]
+      : req.params.userId;
     const { name, email } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid("userId")) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       throw ApiError.badRequest("Invalid user ID format");
     }
 
@@ -195,7 +197,7 @@ export const deleteUser = async (
 
     const { userId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid("userId")) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       throw ApiError.badRequest("Invalid user ID format");
     }
 

@@ -1,9 +1,73 @@
 import { Response, NextFunction } from "express";
 import mongoose from "mongoose";
-import Child from "../../models/Child.model";
+import Child, { IChild } from "../../models/Child.model";
 import { ApiError } from "../../middlewares/apiError";
 import { HTTP_STATUS } from "../../config/constants";
 import { AuthRequest } from "../../middlewares/auth.middleware";
+
+function parseList(value?: string | null): string[] {
+  if (!value) return [];
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+  if (trimmed.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item).trim()).filter(Boolean);
+      }
+    } catch {
+      // fall through to comma-separated
+    }
+  }
+  return trimmed.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+function serializeList(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean).join(", ");
+  }
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  return undefined;
+}
+
+function parseMedications(raw?: string | null) {
+  let parsedMedications: unknown = raw;
+  if (parsedMedications) {
+    try {
+      const parsed = JSON.parse(String(parsedMedications));
+      if (Array.isArray(parsed)) {
+        parsedMedications = parsed;
+      }
+    } catch {
+      // keep as string
+    }
+  }
+  return parsedMedications;
+}
+
+function formatChild(child: IChild) {
+  const parsedDiagnosis = parseList(child.diagnosis);
+  return {
+    id: child._id.toString(),
+    name: child.name,
+    age: child.age,
+    dateOfBirth: child.dateOfBirth,
+    gender: child.gender,
+    diagnosis: parsedDiagnosis,
+    diagnoses: parsedDiagnosis,
+    medicalHistory: child.medicalHistory,
+    medications: parseMedications(child.medications),
+    allergies: parseList(child.allergies),
+    areasOfFocus: parseList(child.areasOfFocus),
+    supportGoals: parseList(child.supportGoals),
+    parentId: child.parentId.toString(),
+    createdAt: child.createdAt,
+    updatedAt: child.updatedAt,
+  };
+}
 
 /**
  * Get all children for the authenticated user
@@ -19,46 +83,14 @@ export const getChildren = async (
       throw ApiError.unauthorized("User not authenticated");
     }
 
-    const children = await Child.find({ parentId: req.user.id })
-      .sort({ createdAt: -1 });
+    const children = await Child.find({ parentId: req.user.id }).sort({
+      createdAt: -1,
+    });
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
       data: {
-        children: children.map((child) => {
-          // Parse medications from JSON string if it exists
-          let parsedMedications: any = child.medications;
-          if (parsedMedications) {
-            try {
-              const parsed = JSON.parse(parsedMedications);
-              if (Array.isArray(parsed)) {
-                parsedMedications = parsed;
-              }
-            } catch {
-              // If parsing fails, keep as string
-            }
-          }
-
-          // Parse diagnosis and allergies from comma-separated strings
-          const parsedDiagnosis = child.diagnosis ? child.diagnosis.split(", ").filter(Boolean) : [];
-          const parsedAllergies = child.allergies ? child.allergies.split(", ").filter(Boolean) : [];
-
-          return {
-            id: child._id.toString(),
-            name: child.name,
-            age: child.age,
-            dateOfBirth: child.dateOfBirth,
-            gender: child.gender,
-            diagnosis: parsedDiagnosis,
-            diagnoses: parsedDiagnosis, // Alias for frontend compatibility
-            medicalHistory: child.medicalHistory,
-            medications: parsedMedications,
-            allergies: parsedAllergies,
-            parentId: child.parentId.toString(),
-            createdAt: child.createdAt,
-            updatedAt: child.updatedAt,
-          };
-        }),
+        children: children.map((child) => formatChild(child)),
         count: children.length,
       },
     });
@@ -70,7 +102,6 @@ export const getChildren = async (
 /**
  * Get child by ID (only if belongs to authenticated user)
  * GET /api/children/:childId
- * Only returns child if it belongs to the authenticated user
  */
 export const getChildById = async (
   req: AuthRequest,
@@ -90,57 +121,25 @@ export const getChildById = async (
       throw ApiError.badRequest("Invalid child ID format");
     }
 
-    // Find child only if it belongs to authenticated user
     const child = await Child.findOne({
       _id: childId,
-      parentId: req.user.id, // Only find if it belongs to authenticated user
+      parentId: req.user.id,
     });
 
     if (!child) {
-      // Don't reveal if child exists but belongs to someone else
-      throw ApiError.notFound("Child not found or you don't have permission to view it");
+      throw ApiError.notFound(
+        "Child not found or you don't have permission to view it"
+      );
     }
 
-    // Verify ownership (redundant but explicit)
     if (child.parentId.toString() !== req.user.id) {
       throw ApiError.forbidden("You can only view your own children");
     }
 
-    // Parse medications from JSON string if it exists
-    let parsedMedications: any = child.medications;
-    if (parsedMedications) {
-      try {
-        const parsed = JSON.parse(parsedMedications);
-        if (Array.isArray(parsed)) {
-          parsedMedications = parsed;
-        }
-      } catch {
-        // If parsing fails, keep as string
-      }
-    }
-
-    // Parse diagnosis and allergies from comma-separated strings
-    const parsedDiagnosis = child.diagnosis ? child.diagnosis.split(", ").filter(Boolean) : [];
-    const parsedAllergies = child.allergies ? child.allergies.split(", ").filter(Boolean) : [];
-
     res.status(HTTP_STATUS.OK).json({
       success: true,
       data: {
-        child: {
-          id: child._id.toString(),
-          name: child.name,
-          age: child.age,
-          dateOfBirth: child.dateOfBirth,
-          gender: child.gender,
-          diagnosis: parsedDiagnosis,
-          diagnoses: parsedDiagnosis, // Alias for frontend compatibility
-          medicalHistory: child.medicalHistory,
-          medications: parsedMedications,
-          allergies: parsedAllergies,
-          parentId: child.parentId.toString(),
-          createdAt: child.createdAt,
-          updatedAt: child.updatedAt,
-        },
+        child: formatChild(child),
       },
     });
   } catch (error) {
@@ -151,7 +150,6 @@ export const getChildById = async (
 /**
  * Create a new child for the authenticated user
  * POST /api/children
- * User ID is automatically set from authenticated user - cannot be overridden
  */
 export const createChild = async (
   req: AuthRequest,
@@ -163,14 +161,25 @@ export const createChild = async (
       throw ApiError.unauthorized("User not authenticated");
     }
 
-    // Reject any attempt to set parentId from request body
     if (req.body.parentId) {
-      throw ApiError.forbidden("Cannot set parentId. It is automatically assigned to your account.");
+      throw ApiError.forbidden(
+        "Cannot set parentId. It is automatically assigned to your account."
+      );
     }
 
-    const { name, age, gender, dateOfBirth, diagnosis, medicalHistory, medications, allergies } = req.body;
+    const {
+      name,
+      age,
+      gender,
+      dateOfBirth,
+      diagnosis,
+      medicalHistory,
+      medications,
+      allergies,
+      areasOfFocus,
+      supportGoals,
+    } = req.body;
 
-    // Validate required fields
     if (!name || !gender) {
       throw ApiError.badRequest("Name and gender are required");
     }
@@ -187,7 +196,6 @@ export const createChild = async (
       throw ApiError.badRequest("Gender must be a non-empty string");
     }
 
-    // Convert arrays to strings for storage
     let diagnosisString: string | undefined;
     if (diagnosis) {
       if (Array.isArray(diagnosis)) {
@@ -200,9 +208,8 @@ export const createChild = async (
     let medicationsString: string | undefined;
     if (medications) {
       if (Array.isArray(medications)) {
-        medicationsString = medications.length > 0 
-          ? JSON.stringify(medications) 
-          : undefined;
+        medicationsString =
+          medications.length > 0 ? JSON.stringify(medications) : undefined;
       } else if (typeof medications === "string") {
         medicationsString = medications.trim() || undefined;
       }
@@ -217,7 +224,6 @@ export const createChild = async (
       }
     }
 
-    // Create child - parentId is ALWAYS set from authenticated user
     const child = await Child.create({
       name: name.trim(),
       age: age !== undefined ? age : undefined,
@@ -227,44 +233,15 @@ export const createChild = async (
       medicalHistory: medicalHistory?.trim() || undefined,
       medications: medicationsString,
       allergies: allergiesString,
-      parentId: req.user.id, // Always use authenticated user's ID
+      areasOfFocus: serializeList(areasOfFocus),
+      supportGoals: serializeList(supportGoals),
+      parentId: req.user.id,
     });
-
-    // Parse medications from JSON string if it exists
-    let parsedMedications: any = child.medications;
-    if (parsedMedications) {
-      try {
-        const parsed = JSON.parse(parsedMedications);
-        if (Array.isArray(parsed)) {
-          parsedMedications = parsed;
-        }
-      } catch {
-        // If parsing fails, keep as string
-      }
-    }
-
-    // Parse diagnosis and allergies from comma-separated strings
-    const parsedDiagnosis = child.diagnosis ? child.diagnosis.split(", ").filter(Boolean) : [];
-    const parsedAllergies = child.allergies ? child.allergies.split(", ").filter(Boolean) : [];
 
     res.status(HTTP_STATUS.CREATED).json({
       success: true,
       data: {
-        child: {
-          id: child._id.toString(),
-          name: child.name,
-          age: child.age,
-          dateOfBirth: child.dateOfBirth,
-          gender: child.gender,
-          diagnosis: parsedDiagnosis,
-          diagnoses: parsedDiagnosis, // Alias for frontend compatibility
-          medicalHistory: child.medicalHistory,
-          medications: parsedMedications,
-          allergies: parsedAllergies,
-          parentId: child.parentId.toString(),
-          createdAt: child.createdAt,
-          updatedAt: child.updatedAt,
-        },
+        child: formatChild(child),
       },
     });
   } catch (error) {
@@ -275,8 +252,6 @@ export const createChild = async (
 /**
  * Update child (only if belongs to authenticated user)
  * PUT /api/children/:childId
- * Only the user who created the child can update it
- * parentId cannot be changed
  */
 export const updateChild = async (
   req: AuthRequest,
@@ -296,30 +271,40 @@ export const updateChild = async (
       throw ApiError.badRequest("Invalid child ID format");
     }
 
-    // Reject any attempt to change parentId
     if (req.body.parentId) {
-      throw ApiError.forbidden("Cannot change parentId. Only the original creator can update this child.");
+      throw ApiError.forbidden(
+        "Cannot change parentId. Only the original creator can update this child."
+      );
     }
 
-    const { name, age, gender, dateOfBirth, diagnosis, medicalHistory, medications, allergies } = req.body;
+    const {
+      name,
+      age,
+      gender,
+      dateOfBirth,
+      diagnosis,
+      medicalHistory,
+      medications,
+      allergies,
+      areasOfFocus,
+      supportGoals,
+    } = req.body;
 
-    // Find child and verify ownership
     const child = await Child.findOne({
       _id: childId,
-      parentId: req.user.id, // Only find if it belongs to authenticated user
+      parentId: req.user.id,
     });
 
     if (!child) {
-      // Don't reveal if child exists but belongs to someone else
-      throw ApiError.notFound("Child not found or you don't have permission to update it");
+      throw ApiError.notFound(
+        "Child not found or you don't have permission to update it"
+      );
     }
 
-    // Double check ownership (redundant but explicit)
     if (child.parentId.toString() !== req.user.id) {
       throw ApiError.forbidden("You can only update children you created");
     }
 
-    // Prepare update data
     const updateData: {
       name?: string;
       age?: number;
@@ -329,6 +314,8 @@ export const updateChild = async (
       medicalHistory?: string;
       medications?: string;
       allergies?: string;
+      areasOfFocus?: string;
+      supportGoals?: string;
     } = {};
 
     if (name !== undefined) {
@@ -359,10 +346,10 @@ export const updateChild = async (
       updateData.gender = gender.trim();
     }
 
-    // Convert arrays to strings for storage
     if (diagnosis !== undefined) {
       if (Array.isArray(diagnosis)) {
-        updateData.diagnosis = diagnosis.length > 0 ? diagnosis.join(", ") : undefined;
+        updateData.diagnosis =
+          diagnosis.length > 0 ? diagnosis.join(", ") : undefined;
       } else if (typeof diagnosis === "string") {
         updateData.diagnosis = diagnosis.trim() || undefined;
       }
@@ -374,7 +361,8 @@ export const updateChild = async (
 
     if (medications !== undefined) {
       if (Array.isArray(medications)) {
-        updateData.medications = medications.length > 0 ? JSON.stringify(medications) : undefined;
+        updateData.medications =
+          medications.length > 0 ? JSON.stringify(medications) : undefined;
       } else if (typeof medications === "string") {
         updateData.medications = medications.trim() || undefined;
       }
@@ -382,66 +370,41 @@ export const updateChild = async (
 
     if (allergies !== undefined) {
       if (Array.isArray(allergies)) {
-        updateData.allergies = allergies.length > 0 ? allergies.join(", ") : undefined;
+        updateData.allergies =
+          allergies.length > 0 ? allergies.join(", ") : undefined;
       } else if (typeof allergies === "string") {
         updateData.allergies = allergies.trim() || undefined;
       }
+    }
+
+    if (areasOfFocus !== undefined) {
+      updateData.areasOfFocus = serializeList(areasOfFocus) ?? "";
+    }
+
+    if (supportGoals !== undefined) {
+      updateData.supportGoals = serializeList(supportGoals) ?? "";
     }
 
     if (Object.keys(updateData).length === 0) {
       throw ApiError.badRequest("No valid fields to update");
     }
 
-    // Update child
-    const updatedChild = await Child.findByIdAndUpdate(
-      childId,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const updatedChild = await Child.findByIdAndUpdate(childId, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedChild) {
       throw ApiError.notFound("Child not found");
     }
 
-    // Parse medications from JSON string if it exists
-    let parsedMedications: any = updatedChild.medications;
-    if (parsedMedications) {
-      try {
-        const parsed = JSON.parse(parsedMedications);
-        if (Array.isArray(parsed)) {
-          parsedMedications = parsed;
-        }
-      } catch {
-        // If parsing fails, keep as string
-      }
-    }
-
-    // Parse diagnosis and allergies from comma-separated strings
-    const parsedDiagnosis = updatedChild.diagnosis ? updatedChild.diagnosis.split(", ").filter(Boolean) : [];
-    const parsedAllergies = updatedChild.allergies ? updatedChild.allergies.split(", ").filter(Boolean) : [];
-
     res.status(HTTP_STATUS.OK).json({
       success: true,
       data: {
-        child: {
-          id: updatedChild._id.toString(),
-          name: updatedChild.name,
-          age: updatedChild.age,
-          dateOfBirth: updatedChild.dateOfBirth,
-          gender: updatedChild.gender,
-          diagnosis: parsedDiagnosis,
-          diagnoses: parsedDiagnosis, // Alias for frontend compatibility
-          medicalHistory: updatedChild.medicalHistory,
-          medications: parsedMedications,
-          allergies: parsedAllergies,
-          parentId: updatedChild.parentId.toString(),
-          createdAt: updatedChild.createdAt,
-          updatedAt: updatedChild.updatedAt,
-        },
+        child: formatChild(updatedChild),
       },
     });
   } catch (error) {
     next(error);
   }
 };
-

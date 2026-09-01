@@ -12,6 +12,8 @@ export function CategoryTab({ label, selected, onPress }: Props) {
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
       style={({ pressed }) => [
         styles.chip,
         selected && styles.chipSelected,
@@ -30,10 +32,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 999,
-    marginRight: 10,
+    marginEnd: 10,
     backgroundColor: c.white,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.inputBorder,
+    borderWidth: 1,
+    borderColor: c.primary,
   },
   chipSelected: {
     backgroundColor: c.primary,

@@ -1,12 +1,14 @@
 import { Tabs } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { MainTabBar } from "../../components/navigation/MainTabBar";
 
 /**
  * Main tabs: Home, Discover, (+ FAB), Circles (community), Settings (profile).
- * Directory, bookings, library, and legacy routes remain available via href: null.
  */
 export default function TabsLayout() {
+  const { t } = useTranslation();
+
   return (
     <Tabs
       tabBar={(props) => <MainTabBar {...props} />}
@@ -15,15 +17,18 @@ export default function TabsLayout() {
         tabBarShowLabel: true,
       }}
     >
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="discover" options={{ title: "Discover" }} />
+      <Tabs.Screen name="index" options={{ title: t("tabs.home") }} />
+      <Tabs.Screen name="discover" options={{ title: t("tabs.discover") }} />
       <Tabs.Screen
         name="community"
-        options={{ title: "Circles", tabBarLabel: "Circles" }}
+        options={{ title: t("tabs.circles"), tabBarLabel: t("tabs.circles") }}
       />
       <Tabs.Screen
         name="profile"
-        options={{ title: "Settings", tabBarLabel: "Settings" }}
+        options={{
+          title: t("tabs.profile"),
+          tabBarLabel: t("tabs.profile"),
+        }}
       />
 
       <Tabs.Screen name="directory" options={{ href: null }} />

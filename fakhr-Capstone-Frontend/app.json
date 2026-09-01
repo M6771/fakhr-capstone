@@ -12,6 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.yourteam.fakhr",
       "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true,
         "LSApplicationQueriesSchemes": [
           "comgooglemaps",
           "googlechromes",
@@ -35,6 +36,8 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-updates",
+      "expo-localization",
       "expo-router",
       [
         "expo-splash-screen",

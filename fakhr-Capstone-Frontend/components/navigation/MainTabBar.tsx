@@ -3,11 +3,15 @@ import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { CommonActions } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLanguage } from "../../context/LanguageContext";
 import { libraryColors as c } from "../../constants/libraryTheme";
 
-export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+export function MainTabBar({ state, navigation }: BottomTabBarProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const bottomPad = Math.max(insets.bottom, 8);
@@ -17,8 +21,15 @@ export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps
   const renderTab = (name: "index" | "discover" | "community" | "profile") => {
     const route = state.routes.find((r) => r.name === name);
     if (!route) return <View key={name} style={styles.tab} />;
-    const opts = descriptors[route.key].options;
-    const label = String(opts.tabBarLabel ?? opts.title ?? name);
+    const tabKey =
+      name === "index"
+        ? "tabs.home"
+        : name === "discover"
+          ? "tabs.discover"
+          : name === "community"
+            ? "tabs.circles"
+            : "tabs.profile";
+    const label = t(tabKey);
     const focused = focusedRoute === name;
     const color = focused ? c.primary : c.textTertiary;
 
@@ -29,7 +40,7 @@ export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps
     if (name === "community")
       iconName = focused ? "people-circle" : "people-circle-outline";
     if (name === "profile")
-      iconName = focused ? "settings" : "settings-outline";
+      iconName = focused ? "person" : "person-outline";
 
     const onPress = () => {
       const event = navigation.emit({
@@ -71,7 +82,13 @@ export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps
         },
       ]}
     >
-      <View style={[styles.row, { minHeight: barHeight }]}>
+      <View
+        style={[
+          styles.row,
+          { minHeight: barHeight },
+          isRTL && styles.rowReverse,
+        ]}
+      >
         {renderTab("index")}
         {renderTab("discover")}
         <View style={styles.fabSpacer} />
@@ -114,6 +131,9 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  rowReverse: {
+    flexDirection: "row-reverse",
   },
   tab: {
     flex: 1,

@@ -10,20 +10,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { libraryColors as c } from "../../../constants/libraryTheme";
+import { useTranslation } from "react-i18next";
 
 /**
  * Discover tab — browse Library, Directory, and resources (expand when wired to APIs).
  */
 export default function DiscoverScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.body}>
-        <Text style={styles.title}>Discover</Text>
-        <Text style={styles.sub}>
-          Explore guides, centers, and curated content for your family.
-        </Text>
+        <Text style={styles.title}>{t("discover.title")}</Text>
+        <Text style={styles.sub}>{t("discover.subtitle")}</Text>
 
         <Pressable
           style={styles.linkCard}
@@ -31,8 +31,8 @@ export default function DiscoverScreen() {
         >
           <Ionicons name="library-outline" size={24} color={c.primary} />
           <View style={styles.linkText}>
-            <Text style={styles.linkTitle}>Fakhr Library</Text>
-            <Text style={styles.linkSub}>Videos, articles, and guides</Text>
+            <Text style={styles.linkTitle}>{t("discover.library")}</Text>
+            <Text style={styles.linkSub}>{t("discover.librarySub")}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={c.textLight} />
         </Pressable>
@@ -43,8 +43,8 @@ export default function DiscoverScreen() {
         >
           <Ionicons name="business-outline" size={24} color={c.primary} />
           <View style={styles.linkText}>
-            <Text style={styles.linkTitle}>Centers & Professionals</Text>
-            <Text style={styles.linkSub}>Book appointments near you</Text>
+            <Text style={styles.linkTitle}>{t("discover.centers")}</Text>
+            <Text style={styles.linkSub}>{t("discover.centersSub")}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={c.textLight} />
         </Pressable>
@@ -52,13 +52,13 @@ export default function DiscoverScreen() {
         <Pressable
           style={styles.linkCard}
           onPress={() =>
-            Alert.alert("Coming soon", "Personalized picks based on your child profile.")
+            Alert.alert(t("discover.comingSoon"), t("discover.comingSoonBody"))
           }
         >
           <Ionicons name="sparkles-outline" size={24} color={c.primary} />
           <View style={styles.linkText}>
-            <Text style={styles.linkTitle}>For you</Text>
-            <Text style={styles.linkSub}>ADHD, Autism, school readiness & more</Text>
+            <Text style={styles.linkTitle}>{t("discover.forYou")}</Text>
+            <Text style={styles.linkSub}>{t("discover.forYouSub")}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={c.textLight} />
         </Pressable>

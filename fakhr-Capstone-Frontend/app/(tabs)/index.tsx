@@ -18,6 +18,7 @@ import { HealthCenter } from "../../types/directory.types";
 import { getCurrentUser } from "../../api/users.api";
 import { useAuth } from "../../context/AuthContext";
 import { RESOURCES, RESOURCE_CATEGORIES } from "../../constants/resources";
+import { useTranslation } from "react-i18next";
 
 // Design system colors
 const colors = {
@@ -37,17 +38,18 @@ const colors = {
   badge: "#7FB77E",
 };
 
-function getGreeting(): string {
+function getGreetingKey(): "home.goodMorning" | "home.goodAfternoon" | "home.goodEvening" {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  if (hour < 12) return "home.goodMorning";
+  if (hour < 17) return "home.goodAfternoon";
+  return "home.goodEvening";
 }
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
-  const greeting = getGreeting();
+  const greeting = t(getGreetingKey());
   // "ADHD" is selected by default
   const [selectedResource, setSelectedResource] = React.useState<string | null>(
     "adhd"
@@ -80,7 +82,7 @@ export default function HomeScreen() {
       ? centersQueryError.message
       : typeof centersQueryError === "string"
         ? centersQueryError
-        : "Unknown error";
+        : t("home.unknownError");
 
   const centers: HealthCenter[] = React.useMemo(() => {
     if (!centersData || !Array.isArray(centersData)) return [];
@@ -88,7 +90,7 @@ export default function HomeScreen() {
   }, [centersData]);
 
   // Get user information - use API data if available, fallback to context user, then defaults
-  const userName = currentUser?.name || user?.name || "User";
+  const userName = currentUser?.name || user?.name || t("home.userFallback");
   const userInitials = React.useMemo(() => {
     if (!userName) return "U";
     return userName
@@ -135,7 +137,7 @@ export default function HomeScreen() {
               pressed && { transform: [{ scale: 0.95 }] },
             ]}
             onPress={() => {
-              Alert.alert("Notifications", "You have 2 new notifications");
+              Alert.alert(t("home.notifications"), t("home.newNotifications"));
             }}
           >
             <Ionicons
@@ -152,9 +154,9 @@ export default function HomeScreen() {
         {/* Welcome Card */}
         <View style={styles.welcomeCard}>
           <View style={styles.welcomeContent}>
-            <Text style={styles.welcomeTitle}>Welcome to Fakhr</Text>
+            <Text style={styles.welcomeTitle}>{t("home.welcomeToFakhr")}</Text>
             <Text style={styles.welcomeSubtitle}>
-              Your trusted companion for special needs resources
+              {t("home.welcomeSubtitle")}
             </Text>
           </View>
           <TouchableOpacity
@@ -170,11 +172,11 @@ export default function HomeScreen() {
           <View style={styles.resourceCardHeader}>
             <Ionicons name="library-outline" size={22} color={colors.primary} />
             <Text style={styles.resourceCardTitle}>
-              What resource are you looking for?
+              {t("home.resourceQuestion")}
             </Text>
           </View>
           <Text style={styles.resourceCardSubtitle}>
-            Select a category to explore helpful resources
+            {t("home.resourceSubtitle")}
           </Text>
 
           {/* Resource Type Buttons */}
@@ -211,7 +213,7 @@ export default function HomeScreen() {
               >
                 ADD
               </Text>
-              <Text style={styles.resourceButtonDesc}>Attention Deficit</Text>
+              <Text style={styles.resourceButtonDesc}>{t("home.attentionDeficit")}</Text>
             </Pressable>
 
             <Pressable
@@ -247,7 +249,7 @@ export default function HomeScreen() {
               >
                 ADHD
               </Text>
-              <Text style={styles.resourceButtonDesc}>Hyperactivity</Text>
+              <Text style={styles.resourceButtonDesc}>{t("home.hyperactivity")}</Text>
             </Pressable>
 
             <Pressable
@@ -286,7 +288,7 @@ export default function HomeScreen() {
               >
                 Autism
               </Text>
-              <Text style={styles.resourceButtonDesc}>Spectrum</Text>
+              <Text style={styles.resourceButtonDesc}>{t("home.spectrum")}</Text>
             </Pressable>
           </View>
         </View>
@@ -313,13 +315,13 @@ export default function HomeScreen() {
                 <View>
                   <Text style={styles.resourcesSectionTitle}>
                     {selectedResource === "add"
-                      ? "ADD Resources"
+                      ? t("home.addResources")
                       : selectedResource === "adhd"
-                        ? "ADHD Resources"
-                        : "Autism Resources"}
+                        ? t("home.adhdResources")
+                        : t("home.autismResources")}
                   </Text>
                   <Text style={styles.resourcesSectionCount}>
-                    Curated resources to help you
+                    {t("home.curatedHelp")}
                   </Text>
                 </View>
               </View>
@@ -401,10 +403,9 @@ export default function HomeScreen() {
                 color={colors.primary}
               />
             </View>
-            <Text style={styles.emptyStateTitle}>Discover Resources</Text>
+            <Text style={styles.emptyStateTitle}>{t("home.discoverResources")}</Text>
             <Text style={styles.emptyStateDescription}>
-              Select ADD, ADHD, or Autism above to explore curated video
-              resources and helpful guides
+              {t("home.emptyResourcesDescription")}
             </Text>
             <View style={styles.emptyStateHints}>
               <View style={styles.emptyStateHint}>
@@ -414,7 +415,7 @@ export default function HomeScreen() {
                   color={colors.primary}
                 />
                 <Text style={styles.emptyStateHintText}>
-                  Expert-curated content
+                  {t("home.expertCurated")}
                 </Text>
               </View>
               <View style={styles.emptyStateHint}>
@@ -424,7 +425,7 @@ export default function HomeScreen() {
                   color={colors.primary}
                 />
                 <Text style={styles.emptyStateHintText}>
-                  Free YouTube videos
+                  {t("home.freeYoutube")}
                 </Text>
               </View>
               <View style={styles.emptyStateHint}>
@@ -434,7 +435,7 @@ export default function HomeScreen() {
                   color={colors.primary}
                 />
                 <Text style={styles.emptyStateHintText}>
-                  Practical strategies
+                  {t("home.practicalStrategies")}
                 </Text>
               </View>
             </View>
@@ -449,9 +450,9 @@ export default function HomeScreen() {
                 <Ionicons name="medical" size={22} color={colors.primary} />
               </View>
               <View>
-                <Text style={styles.centersCardTitle}>Health Centers</Text>
+                <Text style={styles.centersCardTitle}>{t("home.healthCenters")}</Text>
                 <Text style={styles.centersCardSubtitle}>
-                  Find specialized care centers near you
+                  {t("home.findSpecializedCare")}
                 </Text>
               </View>
             </View>
@@ -462,7 +463,7 @@ export default function HomeScreen() {
                 pressed && { opacity: 0.7 },
               ]}
             >
-              <Text style={styles.centersViewAllText}>View All</Text>
+              <Text style={styles.centersViewAllText}>{t("home.viewAll")}</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.primary} />
             </Pressable>
           </View>
@@ -470,12 +471,12 @@ export default function HomeScreen() {
           {centersLoading ? (
             <View style={styles.centersLoading}>
               <ActivityIndicator size="small" color={colors.primary} />
-              <Text style={styles.centersLoadingText}>Loading centers...</Text>
+              <Text style={styles.centersLoadingText}>{t("home.loadingCenters")}</Text>
             </View>
           ) : centersError ? (
             <View style={styles.centersEmpty}>
               <Ionicons name="cloud-offline-outline" size={32} color={colors.textTertiary} />
-              <Text style={styles.centersEmptyText}>Could not load centers</Text>
+              <Text style={styles.centersEmptyText}>{t("home.couldNotLoadCenters")}</Text>
               <Text style={styles.centersErrorDetail} numberOfLines={6}>
                 {centersErrorMessage.trim()}
               </Text>
@@ -488,7 +489,7 @@ export default function HomeScreen() {
                 onPress={() => refetchCenters()}
                 style={({ pressed }) => [styles.centersRetryBtn, pressed && { opacity: 0.8 }]}
               >
-                <Text style={styles.centersRetryText}>Tap to retry</Text>
+                <Text style={styles.centersRetryText}>{t("home.tapToRetry")}</Text>
               </Pressable>
             </View>
           ) : centers.length > 0 ? (
@@ -561,7 +562,7 @@ export default function HomeScreen() {
                 size={32}
                 color={colors.textTertiary}
               />
-              <Text style={styles.centersEmptyText}>No centers available</Text>
+              <Text style={styles.centersEmptyText}>{t("home.noCenters")}</Text>
             </View>
           )}
         </View>

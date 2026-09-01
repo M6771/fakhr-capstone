@@ -1,19 +1,26 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { I18nManager, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { libraryColors as c } from "../../constants/libraryTheme";
+import { useLanguage } from "../../context/LanguageContext";
 
 export function SafeBanner() {
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
+  const reverseRows = isRTL !== I18nManager.isRTL;
+
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, reverseRows && styles.rowReverse]}>
       <View style={styles.iconCircle}>
         <Ionicons name="shield-checkmark" size={22} color={c.primary} />
       </View>
       <View style={styles.textBlock}>
-        <Text style={styles.title}>Safe Community Space</Text>
-        <Text style={styles.sub}>
-          All content is moderated to ensure a supportive environment for all
-          parents.
+        <Text style={[styles.title, isRTL && styles.textRtl]}>
+          {t("community.safeTitle")}
+        </Text>
+        <Text style={[styles.sub, isRTL && styles.textRtl]}>
+          {t("community.safeSubtitle")}
         </Text>
       </View>
     </View>
@@ -24,10 +31,15 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: c.chipBg,
+    backgroundColor: "#ECEEF2",
     borderRadius: 16,
     padding: 14,
     marginBottom: 16,
+  },
+  rowReverse: { flexDirection: "row-reverse" },
+  textRtl: {
+    textAlign: "right",
+    writingDirection: "rtl",
   },
   iconCircle: {
     width: 44,
@@ -36,9 +48,9 @@ const styles = StyleSheet.create({
     backgroundColor: c.white,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    marginHorizontal: 4,
   },
-  textBlock: { flex: 1 },
+  textBlock: { flex: 1, marginHorizontal: 8 },
   title: {
     fontSize: 15,
     fontWeight: "700",

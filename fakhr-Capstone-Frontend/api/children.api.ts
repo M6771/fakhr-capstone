@@ -17,6 +17,8 @@ export interface Child {
   medicalHistory?: string;
   medications?: Medication[] | string;
   allergies?: string[] | string;
+  areasOfFocus?: string[];
+  supportGoals?: string[];
   parentId: string;
   createdAt?: string;
   updatedAt?: string;
@@ -77,6 +79,8 @@ export const createChild = async (data: {
   medicalHistory?: string;
   medications?: Medication[];
   allergies?: string[];
+  areasOfFocus?: string[];
+  supportGoals?: string[];
 }): Promise<Child> => {
   const response = await instance.post<ChildResponse>("/children", data);
   return (response as unknown as ChildResponse).data.child;
@@ -97,6 +101,8 @@ export const updateChild = async (
     medicalHistory?: string;
     medications?: Medication[];
     allergies?: string[];
+    areasOfFocus?: string[];
+    supportGoals?: string[];
   }
 ): Promise<Child> => {
   const response = await instance.put<ChildResponse>(`/children/${childId}`, data);

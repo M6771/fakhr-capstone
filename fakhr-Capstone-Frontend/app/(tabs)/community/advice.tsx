@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
+  I18nManager,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,8 +14,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { libraryColors as c } from "../../../constants/libraryTheme";
+import { useLanguage } from "../../../context/LanguageContext";
 
 export default function AdviceReplyScreen() {
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
+  const reverseRows = isRTL !== I18nManager.isRTL;
   const router = useRouter();
   const { postId, preview } = useLocalSearchParams<{
     postId?: string;
@@ -33,45 +39,57 @@ export default function AdviceReplyScreen() {
 
   const submit = () => {
     if (!reply.trim()) {
-      Alert.alert("Reply", "Please write a short message.");
+      Alert.alert(t("community.adviceTitle"), t("community.adviceEmpty"));
       return;
     }
-    Alert.alert(
-      "Advice sent",
-      "Thank you for supporting another parent. (mock)",
-      [{ text: "OK", onPress: () => router.back() }]
-    );
+    Alert.alert(t("community.adviceSent"), t("community.adviceSentBody"), [
+      { text: t("community.ok"), onPress: () => router.back() },
+    ]);
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.back}>
-          <Ionicons name="chevron-back" size={26} color={c.text} />
+      <View style={[styles.header, reverseRows && styles.rowReverse]}>
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.back}
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back")}
+        >
+          <Ionicons
+            name={isRTL ? "chevron-forward" : "chevron-back"}
+            size={26}
+            color={c.text}
+          />
         </Pressable>
-        <Text style={styles.title}>Give Advice</Text>
+        <Text style={styles.title}>{t("community.adviceTitle")}</Text>
         <View style={{ width: 44 }} />
       </View>
       <ScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.label}>Thread</Text>
-        <Text style={styles.preview}>
-          {previewText || `Post ${postId ?? ""}`}
+        <Text style={[styles.label, isRTL && styles.textRtl]}>
+          {t("community.thread")}
         </Text>
-        <Text style={styles.label}>Your reply</Text>
+        <Text style={[styles.preview, isRTL && styles.textRtl]}>
+          {previewText || `${t("community.post")} ${postId ?? ""}`}
+        </Text>
+        <Text style={[styles.label, isRTL && styles.textRtl]}>
+          {t("community.yourReply")}
+        </Text>
         <TextInput
-          style={styles.input}
-          placeholder="Share experience, resources, or encouragement..."
+          style={[styles.input, isRTL && styles.textRtl]}
+          placeholder={t("community.replyPlaceholder")}
           placeholderTextColor={c.textLight}
           value={reply}
           onChangeText={setReply}
           multiline
           textAlignVertical="top"
+          textAlign={isRTL ? "right" : "left"}
         />
         <Pressable style={styles.submit} onPress={submit}>
-          <Text style={styles.submitText}>Post reply</Text>
+          <Text style={styles.submitText}>{t("community.postReply")}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -85,6 +103,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 8,
     paddingBottom: 8,
+  },
+  rowReverse: { flexDirection: "row-reverse" },
+  textRtl: {
+    textAlign: "right",
+    writingDirection: "rtl",
   },
   back: {
     width: 44,

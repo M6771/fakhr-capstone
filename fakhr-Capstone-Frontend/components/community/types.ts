@@ -1,33 +1,37 @@
 export type CommunityCategoryId = "all" | "tips" | "education";
 
-export type BasePost = {
-  id: string;
-  categoryIds: CommunityCategoryId[];
-  authorName: string;
-  authorAvatarUrl?: string;
-  metaLine: string;
-  createdLabel: string;
+type LocalizedPostFields = {
+  nameKey: string;
+  timeKey: string;
+  roleKey: string;
+  bodyKey: string;
 };
 
-export type TextPost = BasePost & {
+export type TextPost = LocalizedPostFields & {
+  id: string;
   kind: "text";
-  body: string;
+  categoryIds: CommunityCategoryId[];
+  avatarUrl?: string;
   likes: number;
   comments: number;
 };
 
-export type ImagePost = BasePost & {
+export type ImagePost = LocalizedPostFields & {
+  id: string;
   kind: "image";
-  body: string;
+  categoryIds: CommunityCategoryId[];
+  avatarUrl?: string;
   imageUrl: string;
   likes: number;
   comments: number;
+  liked?: boolean;
 };
 
-export type QuestionPost = BasePost & {
+export type QuestionPost = LocalizedPostFields & {
+  id: string;
   kind: "question";
-  badgeLabel: string;
-  question: string;
+  categoryIds: CommunityCategoryId[];
+  badgeKey: string;
   responseCount: number;
 };
 
