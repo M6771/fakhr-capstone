@@ -15,6 +15,7 @@ import directoryRoutes from "./modules/directory/directory.routes";
 import centerRoutes from "./modules/centers/centers.routes";
 import helpCenterRoutes from "./modules/helpCenter/helpCenter.routes";
 import carePathRoutes from "./modules/carePath/carePath.routes";
+import aiRoutes from "./modules/ai/ai.routes";
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use("/api/services", servicesRoutes);
 app.use("/api/centers", centerRoutes);
 app.use("/api/help-center", helpCenterRoutes);
 app.use("/api", carePathRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

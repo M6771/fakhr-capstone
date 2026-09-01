@@ -91,8 +91,20 @@ export const validateTemplateId = (templateId: unknown): string | undefined => {
   }
 };
 
+export const validateCheckinBody = (body: unknown): CheckinInput => {
+  try {
+    return checkinSchema.parse(body);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw ApiError.badRequest(error.issues[0]?.message || "Invalid check-in data");
+    }
+    throw ApiError.badRequest("Invalid check-in data");
+  }
+};
+
 // Type exports for TypeScript
 export type GenerateCarePathInput = z.infer<typeof generateCarePathSchema>;
+export type GenerateCarePathBody = GenerateCarePathInput;
 export type GetCurrentInput = z.infer<typeof getCurrentSchema>;
 export type CompleteTaskInput = z.infer<typeof completeTaskSchema>;
 export type SkipTaskInput = z.infer<typeof skipTaskSchema>;
